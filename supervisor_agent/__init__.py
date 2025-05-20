@@ -1,1 +1,1 @@
-from .agent import whisky_agent
+from . import agent
