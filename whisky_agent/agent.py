@@ -129,7 +129,7 @@ root_agent = Agent(
 
     **対話履歴:**
     <interaction_history>
-    {interaction_history}
+    {interaction_history if interaction_history is not None else '[]'}
     </interaction_history>
     """,
     tools=[
