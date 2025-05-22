@@ -126,6 +126,11 @@ root_agent = Agent(
     - save_whisky_info (ウイスキー情報保存)
     - save_tasting_note (テイスティングノート保存)
     - get_whisky_history (ウイスキー履歴取得)
+
+    **対話履歴:**
+    <interaction_history>
+    {interaction_history}
+    </interaction_history>
     """,
     tools=[
         save_whisky_info,
