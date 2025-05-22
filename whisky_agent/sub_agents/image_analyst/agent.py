@@ -6,11 +6,15 @@ import json
 import re
 from typing import Dict, Any
 
-def analyze_whisky_image(image_data: bytes, tool_context: ToolContext) -> Dict[str, Any]:
+def analyze_whisky_image(image_base64: str, tool_context: ToolContext) -> Dict[str, Any]:
     """ウイスキー画像を解析するツール"""
     try:
-        model = genai.GenerativeModel("gemini-1.5-pro")
-        encoded_image = base64.b64encode(image_data).decode("utf-8")
+        model = genai.GenerativeModel("gemini-2.0-flash")
+
+        # Base64文字列をそのまま使用するか、バイトデータに変換
+        if image_base64.startswith('data:image'):
+            # データURLの場合、Base64部分を抽出
+            image_base64 = image_base64.split(',')[1]
 
         prompt_text = """
         このウイスキーの銘柄情報を以下のJSON形式で出力してください。日本語で回答してください。
@@ -31,7 +35,7 @@ def analyze_whisky_image(image_data: bytes, tool_context: ToolContext) -> Dict[s
 
         response = model.generate_content([
             prompt_text,
-            {"mime_type": "image/jpeg", "data": encoded_image}
+            {"mime_type": "image/jpeg", "data": image_base64}
         ])
 
         json_str = re.search(r"\{.*\}", response.text, re.DOTALL)
@@ -67,7 +71,7 @@ def format_whisky_info(info: Dict[str, str]) -> str:
 
 image_analyst = Agent(
     name="image_analyst",
-    model="gemini-1.5-pro",
+    model="gemini-2.0-flash-lite",
     description="ウイスキーの画像分析スペシャリスト",
     instruction="""
     あなたはウイスキーの画像分析スペシャリストです。
