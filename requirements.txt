@@ -1,0 +1,8 @@
+python-dotenv
+flask
+line-bot-sdk
+requests
+gunicorn
+google-generativeai
+google-cloud-firestore
+urllib3<2
