@@ -68,7 +68,7 @@ def format_whisky_info(info: Dict[str, str]) -> str:
 image_analyst = Agent(
     name="image_analyst",
     model="gemini-1.5-pro",
-    description="Whisky image analysis specialist",
+    description="ウイスキーの画像分析スペシャリスト",
     instruction="""
     あなたはウイスキーの画像分析スペシャリストです。
 

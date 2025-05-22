@@ -26,7 +26,7 @@ def analyze_tasting(input_text: str, tool_context: ToolContext) -> Dict[str, Any
 tasting_note_analyst = Agent(
     name="tasting_note_analyst",
     model="gemini-2.0-flash-lite",
-    description="Whisky tasting note specialist",
+    description="ウイスキーのテイスティング分析の専門家",
     instruction="""
     あなたはウイスキーのテイスティング分析の専門家です。
 
