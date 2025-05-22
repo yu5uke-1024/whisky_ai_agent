@@ -15,8 +15,11 @@ session_service = InMemorySessionService()
 # 初期状態の設定
 initial_state = {
     "user_name": "ゲスト",
-    "preferences": {},
-    "history": []
+    "history": [],
+    "latest_analysis": {
+        "whisky_info": None,
+        "tasting_note": None
+    }
 }
 
 async def main_async():

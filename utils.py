@@ -120,20 +120,6 @@ def display_state(
         user_name = session.state.get("user_name", "Unknown")
         print(f"👤 User: {user_name}")
 
-        # Handle purchased courses
-        purchased_courses = session.state.get("purchased_courses", [])
-        if purchased_courses and any(purchased_courses):
-            print("📚 Courses:")
-            for course in purchased_courses:
-                if isinstance(course, dict):
-                    course_id = course.get("id", "Unknown")
-                    purchase_date = course.get("purchase_date", "Unknown date")
-                    print(f"  - {course_id} (purchased on {purchase_date})")
-                elif course:  # Handle string format for backward compatibility
-                    print(f"  - {course}")
-        else:
-            print("📚 Courses: None")
-
         # Handle interaction history in a more readable way
         interaction_history = session.state.get("interaction_history", [])
         if interaction_history:
@@ -150,9 +136,6 @@ def display_state(
                     elif action == "agent_response":
                         agent = interaction.get("agent", "unknown")
                         response = interaction.get("response", "")
-                        # Truncate very long responses for display
-                        if len(response) > 100:
-                            response = response[:97] + "..."
                         print(f'  {idx}. {agent} response at {timestamp}: "{response}"')
                     else:
                         details = ", ".join(
@@ -173,7 +156,7 @@ def display_state(
         other_keys = [
             k
             for k in session.state.keys()
-            if k not in ["user_name", "purchased_courses", "interaction_history"]
+            if k not in ["user_name", "interaction_history"]
         ]
         if other_keys:
             print("🔑 Additional State:")
@@ -187,18 +170,8 @@ def display_state(
 
 async def process_agent_response(event):
     """Process and display agent response events."""
-    print(f"Event ID: {event.id}, Author: {event.author}")
-
-    # Check for specific parts first
-    has_specific_part = False
-    if event.content and event.content.parts:
-        for part in event.content.parts:
-            if hasattr(part, "text") and part.text and not part.text.isspace():
-                print(f"  Text: '{part.text.strip()}'")
-
-    # Check for final response after specific parts
-    final_response = None
-    if not has_specific_part and event.is_final_response():
+    # Only process and display the final response
+    if event.is_final_response():
         if (
             event.content
             and event.content.parts
@@ -214,12 +187,14 @@ async def process_agent_response(event):
             print(
                 f"{Colors.BG_BLUE}{Colors.WHITE}{Colors.BOLD}╚═════════════════════════════════════════════════════════════{Colors.RESET}\n"
             )
+            return final_response
         else:
             print(
                 f"\n{Colors.BG_RED}{Colors.WHITE}{Colors.BOLD}==> Final Agent Response: [No text content in final event]{Colors.RESET}\n"
             )
+            return None
 
-    return final_response
+    return None
 
 
 async def call_agent_async(runner, user_id, session_id, query):
