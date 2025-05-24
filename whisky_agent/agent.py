@@ -61,7 +61,7 @@ async def get_whisky_history() -> dict:
 
 root_agent = Agent(
     name="whisky_agent",
-    model="gemini-2.0-flash-lite",
+    model="gemini-2.5-flash-preview-05-20",
     description="Whisky analysis coordinator with clear agent delegation rules",
     instruction="""
     あなたはウイスキー情報の統括コーディネーターです。

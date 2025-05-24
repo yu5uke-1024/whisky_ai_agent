@@ -22,11 +22,12 @@ async def main_async():
     # 新しいセッションの作成
     APP_NAME = "Whisky Assistant"
     USER_ID = "default_user"
-    new_session = session_service.create_session(
+    new_session = await session_service.create_session(
         app_name=APP_NAME,
         user_id=USER_ID,
         state=initial_state,
     )
+
     SESSION_ID = new_session.id
     print(f"セッション作成: {SESSION_ID}")
 
