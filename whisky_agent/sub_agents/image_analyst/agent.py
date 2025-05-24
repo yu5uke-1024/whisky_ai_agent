@@ -6,84 +6,64 @@ import json
 import re
 from typing import Dict, Any
 
-def analyze_whisky_image(image_base64: str, tool_context: ToolContext) -> Dict[str, Any]:
-    """ウイスキー画像を解析するツール"""
-    try:
-        model = genai.GenerativeModel("gemini-2.0-flash")
-
-        # Base64文字列をそのまま使用するか、バイトデータに変換
-        if image_base64.startswith('data:image'):
-            # データURLの場合、Base64部分を抽出
-            image_base64 = image_base64.split(',')[1]
-
-        prompt_text = """
-        このウイスキーの銘柄情報を以下のJSON形式で出力してください。日本語で回答してください。
-        情報がわからない場合はWeb検索をして情報を取得してください。
-
-        {
-          "brand": "銘柄名",
-          "distillery": "蒸留所名",
-          "age": "熟成年数",
-          "country": "国名",
-          "region": "地域",
-          "whiskey_type": "ウイスキーのタイプ",
-          "alcohol_content": "アルコール度数",
-          "cask_type": "カスクタイプ",
-          "other": "その他の特徴"
-        }
-        """
-
-        response = model.generate_content([
-            prompt_text,
-            {"mime_type": "image/jpeg", "data": image_base64}
-        ])
-
-        json_str = re.search(r"\{.*\}", response.text, re.DOTALL)
-        if not json_str:
-            return {"status": "error", "error": "JSON形式の応答が見つかりません"}
-
-        whiskey_info = json.loads(json_str.group(0))
-        formatted_info = {k: whiskey_info.get(k, "不明") for k in [
-            "brand", "distillery", "age", "country", "region",
-            "whiskey_type", "alcohol_content", "cask_type", "other"
-        ]}
-
-        return {
-            "status": "success",
-            "analysis": formatted_info,
-            "formatted_text": format_whisky_info(formatted_info)
-        }
-
-    except Exception as e:
-        return {"status": "error", "error": str(e)}
-
-def format_whisky_info(info: Dict[str, str]) -> str:
-    """解析結果を読みやすい形式に整形"""
-    return f"""【銘柄】{info['brand']}
-    【蒸留所】{info['distillery']}
-    【ウイスキー分類】{info['whiskey_type']}
-    【国】{info['country']}
-    【地域】{info['region']}
-    【熟成年数】{info['age']}
-    【アルコール度数】{info['alcohol_content']}
-    【カスクタイプ】{info['cask_type']}
-    【その他】{info['other']}""".strip()
 
 image_analyst = Agent(
     name="image_analyst",
-    model="gemini-2.0-flash-lite",
+    model="gemini-2.0-flash",
     description="ウイスキーの画像分析スペシャリスト",
     instruction="""
+    # 役割と責任
     あなたはウイスキーの画像分析スペシャリストです。
+    画像からウイスキーの情報を抽出し、構造化されたデータとして提供することが主な責務です。
 
-    主な役割：
-    1. ウイスキーの画像からラベル情報を読み取り
-    2. ボトルの特徴を分析
-    3. 詳細情報の抽出と提供
+    # 情報抽出ガイドライン
+    1. 必須情報（優先度高）
+       - 銘柄名: 英語・日本語の両表記
+       - 蒸溜所名: 正式名称
+       - アルコール度数: 数値 (%を含めて)
+       - ウイスキータイプ: シングルモルト/ブレンデッド等
 
-    応答形式：
-    - 構造化された情報を日本語で提供
-    - 不明な情報がある場合はその旨を明記
+    2. 重要情報（可能な場合）
+       - 熟成年数: 数値のみ（年数表記は除外）
+       - 生産国: 正式国名
+       - 生産地域: 地方名や特定地域名
+       - カスクタイプ: 使用樽の種類
+
+    3. 補足情報（あれば）
+       - ボトルナンバー: 限定品の場合
+       - 特別な製法: フィニッシュや熟成方法
+       - その他特記事項: 受賞歴など
+
+    # 出力形式
+      "brand": "銘柄名",
+      "distillery": "蒸留所名",
+      "age": "熟成年数",
+      "country": "生産国",
+      "region": "地域",
+      "whiskey_type": "ウイスキーのタイプ",
+      "alcohol_content": "アルコール度数",
+      "cask_type": "カスクタイプ",
+      "other": "その他の重要情報"
+
+    # 分析プロセス
+    1. 画像品質確認
+       - 解像度と明瞭さの確認
+       - ラベルの可読性チェック
+       → 問題がある場合は即座に報告
+
+    2. 情報抽出（優先順位順）
+       - 必須情報を最優先で抽出
+       - 重要情報を可能な範囲で収集
+       - 補足情報を状況に応じて追加
+
+    3. 品質管理
+       - 各情報の確信度を評価
+       - 推測と確定情報を明確に区別
+       - 不明な項目は必ず"不明"と記載
+
+    # エラー条件と対応
+    - 画像不鮮明: 読み取り可能な情報のみ報告
+    - 非ウイスキー: 処理中止＆エラー報告
+    - 部分的解読不能: 確実な情報のみ記載
     """,
-    tools=[analyze_whisky_image],
 )

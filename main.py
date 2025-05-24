@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
+from google.adk.artifacts import InMemoryArtifactService
 from whisky_agent.agent import root_agent
 from utils import add_user_query_to_history, call_agent_async
 import asyncio
@@ -11,6 +12,7 @@ load_dotenv()
 
 # セッションサービスの作成
 session_service = InMemorySessionService()
+artifact_service = InMemoryArtifactService()
 
 # 初期状態の設定
 initial_state = {
@@ -43,6 +45,7 @@ async def main_async():
         agent=root_agent,
         app_name=APP_NAME,
         session_service=session_service,
+        artifact_service=artifact_service,
     )
 
     print("\nWhisky Assistant へようこそ!")
