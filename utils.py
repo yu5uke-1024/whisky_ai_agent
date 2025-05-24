@@ -30,7 +30,7 @@ class Colors:
     BG_WHITE = "\033[47m"
 
 
-def update_interaction_history(session_service, app_name, user_id, session_id, entry):
+async def update_interaction_history(session_service, app_name, user_id, session_id, entry):
     """Add an entry to the interaction history in state.
 
     Args:
@@ -44,7 +44,7 @@ def update_interaction_history(session_service, app_name, user_id, session_id, e
     """
     try:
         # Get current session
-        session = session_service.get_session(
+        session = await session_service.get_session(
             app_name=app_name, user_id=user_id, session_id=session_id
         )
 
@@ -63,7 +63,7 @@ def update_interaction_history(session_service, app_name, user_id, session_id, e
         updated_state["interaction_history"] = interaction_history
 
         # Create a new session with updated state
-        session_service.create_session(
+        await session_service.create_session(
             app_name=app_name,
             user_id=user_id,
             session_id=session_id,
@@ -73,9 +73,9 @@ def update_interaction_history(session_service, app_name, user_id, session_id, e
         print(f"Error updating interaction history: {e}")
 
 
-def add_user_query_to_history(session_service, app_name, user_id, session_id, query):
+async def add_user_query_to_history(session_service, app_name, user_id, session_id, query):
     """Add a user query to the interaction history."""
-    update_interaction_history(
+    await update_interaction_history(
         session_service,
         app_name,
         user_id,
@@ -87,11 +87,11 @@ def add_user_query_to_history(session_service, app_name, user_id, session_id, qu
     )
 
 
-def add_agent_response_to_history(
+async def add_agent_response_to_history(
     session_service, app_name, user_id, session_id, agent_name, response
 ):
     """Add an agent response to the interaction history."""
-    update_interaction_history(
+    await update_interaction_history(
         session_service,
         app_name,
         user_id,
@@ -104,12 +104,12 @@ def add_agent_response_to_history(
     )
 
 
-def display_state(
+async def display_state(
     session_service, app_name, user_id, session_id, label="Current State"
 ):
     """Display the current session state in a formatted way."""
     try:
-        session = session_service.get_session(
+        session = await session_service.get_session(
             app_name=app_name, user_id=user_id, session_id=session_id
         )
 
@@ -207,7 +207,7 @@ async def call_agent_async(runner, user_id, session_id, query):
     agent_name = None
 
     # Display state before processing the message
-    display_state(
+    await display_state(
         runner.session_service,
         runner.app_name,
         user_id,
@@ -231,7 +231,7 @@ async def call_agent_async(runner, user_id, session_id, query):
 
     # Add the agent response to interaction history if we got a final response
     if final_response_text and agent_name:
-        add_agent_response_to_history(
+        await add_agent_response_to_history(
             runner.session_service,
             runner.app_name,
             user_id,
@@ -241,7 +241,7 @@ async def call_agent_async(runner, user_id, session_id, query):
         )
 
     # Display state after processing the message
-    display_state(
+    await display_state(
         runner.session_service,
         runner.app_name,
         user_id,

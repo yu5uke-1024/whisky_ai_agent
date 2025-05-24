@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
+from google.adk.artifacts import InMemoryArtifactService
 from whisky_agent.agent import root_agent
 from utils import add_user_query_to_history, call_agent_async
 import asyncio
@@ -11,6 +12,7 @@ load_dotenv()
 
 # セッションサービスの作成
 session_service = InMemorySessionService()
+artifact_service = InMemoryArtifactService()
 
 # 初期状態の設定
 initial_state = {
@@ -29,13 +31,21 @@ async def main_async():
     )
 
     SESSION_ID = new_session.id
-    print(f"セッション作成: {SESSION_ID}")
+    print(f"--- Examining Session Properties ---")
+    print(f"ID (`id`):                {new_session.id}")
+    print(f"Application Name (`app_name`): {new_session.app_name}")
+    print(f"User ID (`user_id`):         {new_session.user_id}")
+    print(f"State (`state`):           {new_session.state}") # Note: Only shows initial state here
+    print(f"Events (`events`):         {new_session.events}") # Initially empty
+    print(f"Last Update (`last_update_time`): {new_session.last_update_time:.2f}")
+    print(f"---------------------------------")
 
     # Runnerの初期化
     runner = Runner(
         agent=root_agent,
         app_name=APP_NAME,
         session_service=session_service,
+        artifact_service=artifact_service,
     )
 
     print("\nWhisky Assistant へようこそ!")
@@ -52,7 +62,7 @@ async def main_async():
                 break
 
             # 履歴への追加
-            add_user_query_to_history(
+            await add_user_query_to_history(
                 session_service, APP_NAME, USER_ID, SESSION_ID, user_input
             )
 
@@ -63,7 +73,7 @@ async def main_async():
             print(f"エラーが発生しました: {e}")
 
     # 最終セッション状態の表示
-    final_session = session_service.get_session(
+    final_session = await session_service.get_session(
         app_name=APP_NAME,
         user_id=USER_ID,
         session_id=SESSION_ID
