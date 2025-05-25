@@ -40,5 +40,7 @@ image_analyst = Agent(
     # お願い
     抽出した情報は、whisky_agentに返してください。
     whisky_agentは、この情報を元にデータベースへの保存や、ユーザーへの情報提供を行います。
+    出力は、image_stateというキーで返してください。
     """,
+    output_key="image_state",
 )
