@@ -3,6 +3,30 @@ from google.adk.tools.tool_context import ToolContext
 from typing import Dict, Any
 import google.generativeai as genai
 
+def analyze_image(image_data: str, tool_context: ToolContext) -> Dict[str, Any]:
+    """ウイスキーの画像を分析するツール"""
+    try:
+        # 分析結果を取得
+        analysis_result = {
+            "brand": "",
+            "age": "",
+            "distillery": "",
+            "country": "",
+            "region": "",
+            "whisky_type": "",
+            "other": ""
+        }
+
+        return {
+            "status": "success",
+            "image_state": analysis_result  # output_keyに合わせてキーを変更
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e)
+        }
+
 image_analyst = Agent(
     name="image_analyst",
     model="gemini-2.0-flash",
@@ -28,13 +52,15 @@ image_analyst = Agent(
 
     出力形式:
     {
-        "brand": "アードベッグ",
-        "age": "10年",
-        "distillery": "アードベッグ蒸溜所",
-        "country": "スコットランド",
-        "region": "アイラ島",
-        "whisky_type": "ブレンデッドウイスキー",
-        "other": "非常にスモーキー"
+        "image_state": {
+            "brand": "アードベッグ",
+            "age": "10年",
+            "distillery": "アードベッグ蒸溜所",
+            "country": "スコットランド",
+            "region": "アイラ島",
+            "whisky_type": "ブレンデッドウイスキー",
+            "other": "非常にスモーキー"
+        }
     }
 
     # お願い
@@ -42,5 +68,6 @@ image_analyst = Agent(
     whisky_agentは、この情報を元にデータベースへの保存や、ユーザーへの情報提供を行います。
     出力は、image_stateというキーで返してください。
     """,
-    output_key="image_state",
+    tools=[analyze_image],
+    output_key="image_state"  # 親エージェントが参照するためのキー
 )
