@@ -140,6 +140,6 @@ root_agent = Agent(
         save_tasting_note,
         get_whisky_history,
         AgentTool(tasting_note_analyst),
-        # AgentTool(image_analyst),
+        #AgentTool(image_analyst),
     ],
 )
