@@ -51,16 +51,14 @@ image_analyst = Agent(
     5. 地域名は一般的に使用される日本語表記を使用する
 
     出力形式:
-    {
-        "image_state": {
-            "brand": "アードベッグ",
-            "age": "10年",
-            "distillery": "アードベッグ蒸溜所",
-            "country": "スコットランド",
-            "region": "アイラ島",
-            "whisky_type": "ブレンデッドウイスキー",
-            "other": "非常にスモーキー"
-        }
+    "image_state": {
+        "brand": "アードベッグ",
+        "age": "10年",
+        "distillery": "アードベッグ蒸溜所",
+        "country": "スコットランド",
+        "region": "アイラ島",
+        "whisky_type": "ブレンデッドウイスキー",
+        "other": "非常にスモーキー"
     }
 
     # お願い
@@ -69,5 +67,5 @@ image_analyst = Agent(
     出力は、image_stateというキーで返してください。
     """,
     tools=[analyze_image],
-    output_key="image_state"  # 親エージェントが参照するためのキー
+    output_key="image_state"
 )

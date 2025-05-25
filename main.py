@@ -16,7 +16,7 @@ artifact_service = InMemoryArtifactService()
 
 # 初期状態の設定
 initial_state = {
-    "user_name": "ゲスト",
+    "user_name": "ゆーすけ",
     "interaction_history": [],
 }
 
