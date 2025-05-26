@@ -7,3 +7,6 @@ google-generativeai
 google-cloud-firestore
 urllib3<2
 google-adk
+fastapi
+uvicorn
+pillow

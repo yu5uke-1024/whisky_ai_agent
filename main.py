@@ -2,7 +2,7 @@ from dotenv import load_dotenv
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.adk.artifacts import InMemoryArtifactService
-from whisky_agent.agent import root_agent
+from whisky_agent.agent import root_agent, create_agent_with_context
 from utils import add_user_query_to_history, call_agent_async
 import asyncio
 import os
@@ -40,9 +40,14 @@ async def main_async():
     print(f"Last Update (`last_update_time`): {new_session.last_update_time:.2f}")
     print(f"---------------------------------")
 
+    # コンテキスト付きエージェントの作成
+    context_agent = create_agent_with_context(
+        session_service, APP_NAME, USER_ID, SESSION_ID
+    )
+    
     # Runnerの初期化
     runner = Runner(
-        agent=root_agent,
+        agent=context_agent,
         app_name=APP_NAME,
         session_service=session_service,
         artifact_service=artifact_service,

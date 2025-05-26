@@ -205,6 +205,7 @@ async def call_agent_async(runner, user_id, session_id, query):
     )
     final_response_text = None
     agent_name = None
+    sub_agent_results = []
 
     # Display state before processing the message
     await display_state(
@@ -223,11 +224,31 @@ async def call_agent_async(runner, user_id, session_id, query):
             if event.author:
                 agent_name = event.author
 
+            # サブエージェントの実行結果をキャプチャ
+            if hasattr(event, 'tool_call') and event.tool_call:
+                if event.tool_call.name in ['image_analyst', 'tasting_note_analyst']:
+                    sub_agent_results.append({
+                        'agent': event.tool_call.name,
+                        'input': event.tool_call.input,
+                        'result': event.content if event.content else None,
+                        'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    })
+
             response = await process_agent_response(event)
             if response:
                 final_response_text = response
     except Exception as e:
         print(f"{Colors.BG_RED}{Colors.WHITE}ERROR during agent run: {e}{Colors.RESET}")
+
+    # サブエージェントの実行結果をセッション状態に保存
+    if sub_agent_results:
+        await save_sub_agent_results(
+            runner.session_service,
+            runner.app_name,
+            user_id,
+            session_id,
+            sub_agent_results
+        )
 
     # Add the agent response to interaction history if we got a final response
     if final_response_text and agent_name:
@@ -251,3 +272,31 @@ async def call_agent_async(runner, user_id, session_id, query):
 
     print(f"{Colors.YELLOW}{'-' * 30}{Colors.RESET}")
     return final_response_text
+
+async def save_sub_agent_results(session_service, app_name, user_id, session_id, results):
+    """サブエージェントの実行結果をセッション状態に保存"""
+    try:
+        session = await session_service.get_session(
+            app_name=app_name, user_id=user_id, session_id=session_id
+        )
+
+        # 既存のサブエージェント結果を取得
+        sub_agent_history = session.state.get("sub_agent_results", [])
+        
+        # 新しい結果を追加
+        sub_agent_history.extend(results)
+
+        # 状態を更新
+        updated_state = session.state.copy()
+        updated_state["sub_agent_results"] = sub_agent_history
+
+        await session_service.create_session(
+            app_name=app_name,
+            user_id=user_id,
+            session_id=session_id,
+            state=updated_state,
+        )
+        
+        print(f"{Colors.CYAN}サブエージェント結果を保存しました: {len(results)}件{Colors.RESET}")
+    except Exception as e:
+        print(f"Error saving sub-agent results: {e}")
