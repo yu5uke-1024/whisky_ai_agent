@@ -44,6 +44,8 @@ tasting_note_analyst = Agent(
         "rating": 4.5,
         "memo": "総合コメント"
     }
+    出力は、tasting_stateというキーで返してください。
     """,
     tools=[analyze_tasting],
+    output_key="tasting_state",
 )

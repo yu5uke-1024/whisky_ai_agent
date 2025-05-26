@@ -1,69 +1,71 @@
 from google.adk.agents import Agent
 from google.adk.tools.tool_context import ToolContext
-import google.generativeai as genai
-import base64
-import json
-import re
 from typing import Dict, Any
+import google.generativeai as genai
 
+def analyze_image(image_data: str, tool_context: ToolContext) -> Dict[str, Any]:
+    """ウイスキーの画像を分析するツール"""
+    try:
+        # 分析結果を取得
+        analysis_result = {
+            "brand": "",
+            "age": "",
+            "distillery": "",
+            "country": "",
+            "region": "",
+            "whisky_type": "",
+            "other": ""
+        }
+
+        return {
+            "status": "success",
+            "image_state": analysis_result  # output_keyに合わせてキーを変更
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e)
+        }
 
 image_analyst = Agent(
     name="image_analyst",
     model="gemini-2.0-flash",
-    description="ウイスキーの画像分析スペシャリスト",
+    description="ウイスキーのラベル画像から情報を抽出する専門家",
     instruction="""
-    # 役割と責任
-    あなたはウイスキーの画像分析スペシャリストです。
-    画像からウイスキーの情報を抽出し、構造化されたデータとして提供することが主な責務です。
+    あなたはウイスキーのラベル画像から正確に情報を抽出する専門家です。
 
-    # 情報抽出ガイドライン
-    1. 必須情報（優先度高）
-       - 銘柄名: 英語・日本語の両表記
-       - 蒸溜所名: 正式名称
-       - アルコール度数: 数値 (%を含めて)
-       - ウイスキータイプ: シングルモルト/ブレンデッド等
+    抽出する情報と形式:
+    ├── brand: ブランド名を正確に抽出（例: "アードベッグ"）
+    ├── age: 熟成年数を抽出（例: "10年"）
+    ├── distillery: 蒸溜所の正式名称を抽出（例: "アードベッグ蒸溜所"）
+    ├── country: 生産国を抽出（例: "スコットランド"）
+    ├── region: 生産地域を抽出（例: "アイラ島"）
+    ├── whisky_type: ウイスキーの種類を抽出（例: "ブレンデッドウイスキー"）
+    └── other: 特徴的な情報を抽出（例: "非常にスモーキーです"）
 
-    2. 重要情報（可能な場合）
-       - 熟成年数: 数値のみ（年数表記は除外）
-       - 生産国: 正式国名
-       - 生産地域: 地方名や特定地域名
-       - カスクタイプ: 使用樽の種類
+    必須ルール:
+    1. 年数は「年」の単位付きで返す（NASの場合は「NAS」）
+    2. 情報が不明な場合は空文字列を返す
+    3. ブランド名は日本語の正式名称を使用する
+    4. 蒸溜所名は日本語の完全な正式名称を使用する
+    5. 地域名は一般的に使用される日本語表記を使用する
 
-    3. 補足情報（あれば）
-       - ボトルナンバー: 限定品の場合
-       - 特別な製法: フィニッシュや熟成方法
-       - その他特記事項: 受賞歴など
+    出力形式:
+    "image_state": {
+        "brand": "アードベッグ",
+        "age": "10年",
+        "distillery": "アードベッグ蒸溜所",
+        "country": "スコットランド",
+        "region": "アイラ島",
+        "whisky_type": "ブレンデッドウイスキー",
+        "other": "非常にスモーキー"
+    }
 
-    # 出力形式
-      "brand": "銘柄名",
-      "distillery": "蒸留所名",
-      "age": "熟成年数",
-      "country": "生産国",
-      "region": "地域",
-      "whiskey_type": "ウイスキーのタイプ",
-      "alcohol_content": "アルコール度数",
-      "cask_type": "カスクタイプ",
-      "other": "その他の重要情報"
-
-    # 分析プロセス
-    1. 画像品質確認
-       - 解像度と明瞭さの確認
-       - ラベルの可読性チェック
-       → 問題がある場合は即座に報告
-
-    2. 情報抽出（優先順位順）
-       - 必須情報を最優先で抽出
-       - 重要情報を可能な範囲で収集
-       - 補足情報を状況に応じて追加
-
-    3. 品質管理
-       - 各情報の確信度を評価
-       - 推測と確定情報を明確に区別
-       - 不明な項目は必ず"不明"と記載
-
-    # エラー条件と対応
-    - 画像不鮮明: 読み取り可能な情報のみ報告
-    - 非ウイスキー: 処理中止＆エラー報告
-    - 部分的解読不能: 確実な情報のみ記載
+    # お願い
+    抽出した情報は、whisky_agentに返してください。
+    whisky_agentは、この情報を元にデータベースへの保存や、ユーザーへの情報提供を行います。
+    出力は、image_stateというキーで返してください。
     """,
+    tools=[analyze_image],
+    output_key="image_state"
 )

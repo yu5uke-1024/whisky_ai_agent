@@ -128,18 +128,19 @@ root_agent = Agent(
     - get_whisky_history (ウイスキー履歴取得)
 
     **対話履歴:**
-    <interaction_history>
-    {interaction_history if interaction_history is not None else '[]'}
-    </interaction_history>
+    {interaction_history?}
+
+    **ユーザーネーム:**
+    {user_name?}
     """,
-    # sub_agents=[
-    #     image_analyst,
-    # ],
+    sub_agents=[
+        image_analyst,
+    ],
     tools=[
         save_whisky_info,
         save_tasting_note,
         get_whisky_history,
         AgentTool(tasting_note_analyst),
-        AgentTool(image_analyst),
+        # AgentTool(image_analyst),
     ],
 )
