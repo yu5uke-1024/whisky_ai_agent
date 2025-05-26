@@ -42,7 +42,7 @@ class _WhiskyAIHomePageState extends State<WhiskyAIHomePage> {
   String? _selectedImageName;
 
   // PythonのAPIサーバーのURL（ローカル開発用）
-  static const String apiBaseUrl = 'http://127.0.0.1:8001';
+  static const String apiBaseUrl = 'http://127.0.0.1:8000';
 
   @override
   void initState() {
