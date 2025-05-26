@@ -1,31 +1,37 @@
 from google.adk.agents import Agent
-from google.adk.tools.tool_context import ToolContext
 from typing import Dict, Any
-import google.generativeai as genai
+from pydantic import BaseModel, Field
 
-def analyze_image(image_data: str, tool_context: ToolContext) -> Dict[str, Any]:
-    """ウイスキーの画像を分析するツール"""
-    try:
-        # 分析結果を取得
-        analysis_result = {
-            "brand": "",
-            "age": "",
-            "distillery": "",
-            "country": "",
-            "region": "",
-            "whisky_type": "",
-            "other": ""
-        }
-
-        return {
-            "status": "success",
-            "image_state": analysis_result  # output_keyに合わせてキーを変更
-        }
-    except Exception as e:
-        return {
-            "status": "error",
-            "error": str(e)
-        }
+# --- Define Output Schema ---
+class ImageAnalysis(BaseModel):
+    brand: str = Field(
+        description="ブランド名（日本語の正式名称）",
+        default=""
+    )
+    age: str = Field(
+        description="熟成年数（年の単位付き、NASの場合は「NAS」）",
+        default=""
+    )
+    distillery: str = Field(
+        description="蒸溜所の正式名称（日本語）",
+        default=""
+    )
+    country: str = Field(
+        description="生産国",
+        default=""
+    )
+    region: str = Field(
+        description="生産地域",
+        default=""
+    )
+    whisky_type: str = Field(
+        description="ウイスキーの種類",
+        default=""
+    )
+    other: str = Field(
+        description="その他の特徴的な情報",
+        default=""
+    )
 
 image_analyst = Agent(
     name="image_analyst",
@@ -50,22 +56,17 @@ image_analyst = Agent(
     4. 蒸溜所名は日本語の完全な正式名称を使用する
     5. 地域名は一般的に使用される日本語表記を使用する
 
-    出力形式:
-    "image_state": {
+    応答形式:
+    {
         "brand": "アードベッグ",
         "age": "10年",
         "distillery": "アードベッグ蒸溜所",
         "country": "スコットランド",
         "region": "アイラ島",
-        "whisky_type": "ブレンデッドウイスキー",
+        "whisky_type": "シングルモルトウイスキー",
         "other": "非常にスモーキー"
     }
-
-    # お願い
-    抽出した情報は、whisky_agentに返してください。
-    whisky_agentは、この情報を元にデータベースへの保存や、ユーザーへの情報提供を行います。
-    出力は、image_stateというキーで返してください。
     """,
-    tools=[analyze_image],
-    output_key="image_state"
+    output_schema=ImageAnalysis,
+    output_key="image_analysis"
 )

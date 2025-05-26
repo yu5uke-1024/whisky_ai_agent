@@ -1,27 +1,26 @@
 from google.adk.agents import Agent
 from google.adk.tools.tool_context import ToolContext
-from typing import Dict, Any
+from typing import Dict, Any, List
+from pydantic import BaseModel, Field
 from ...models.tasting import TastingNote
 
-def analyze_tasting(input_text: str, tool_context: ToolContext) -> Dict[str, Any]:
-    """テイスティングノートを分析するツール"""
-    try:
-        # 入力テキストから情報を抽出
-        return {
-            "status": "success",
-            "analysis": {
-                "nose": ["分析された香りの特徴"],
-                "palate": ["分析された味わいの特徴"],
-                "finish": ["分析された余韻の特徴"],
-                "rating": 4.5,
-                "memo": "総合的な分析結果"
-            }
-        }
-    except Exception as e:
-        return {
-            "status": "error",
-            "error": str(e)
-        }
+# --- Define Output Schema ---
+class TastingAnalysis(BaseModel):
+    nose: List[str] = Field(
+        description="List of characteristics detected in the nose/aroma"
+    )
+    palate: List[str] = Field(
+        description="List of characteristics detected in the palate/taste"
+    )
+    finish: List[str] = Field(
+        description="List of characteristics detected in the finish/aftertaste"
+    )
+    rating: float = Field(
+        description="Rating on a scale of 1-5",
+        ge=1.0,
+        le=5.0,
+        default=2.5
+    )
 
 tasting_note_analyst = Agent(
     name="tasting_note_analyst",
@@ -41,11 +40,9 @@ tasting_note_analyst = Agent(
         "nose": ["特徴1", "特徴2"...],
         "palate": ["特徴1", "特徴2"...],
         "finish": ["特徴1", "特徴2"...],
-        "rating": 4.5,
-        "memo": "総合コメント"
+        "rating": "1点から5点の評価",
     }
-    出力は、tasting_stateというキーで返してください。
     """,
-    tools=[analyze_tasting],
-    output_key="tasting_state",
+    output_schema=TastingAnalysis,
+    output_key="tasting_analysis"
 )
