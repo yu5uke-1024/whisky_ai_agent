@@ -1,60 +1,28 @@
 from google.adk.agents import Agent
 from google.adk.tools.tool_context import ToolContext
-from typing import Dict, Any, List, Union
+from typing import Dict, Any, List, Union, Literal
 from ...models import TastingAnalysis
 
-def modify_nose(nose: Union[str, List[str]], tool_context: ToolContext) -> dict:
-    """香りの特徴を修正する
-
-    Args:
-        nose: 新しい香りの特徴（文字列または文字列のリスト）
-        tool_context: セッション状態にアクセスするためのコンテキスト
-
-    Returns:
-        修正結果のメッセージ
-    """
-    print(f"--- Tool: modify_nose called with '{nose}' ---")
-
-    current_note = tool_context.state.get("current_tasting_note", TastingAnalysis())
-    current_note.nose = [nose] if isinstance(nose, str) else nose
-    tool_context.state["current_tasting_note"] = current_note
-
-    return {
-        "action": "modify_nose",
-        "nose": nose,
-        "message": f"Updated nose characteristics to: {nose}"
-    }
-
-def modify_palate(palate: Union[str, List[str]], tool_context: ToolContext) -> dict:
-    """味わいの特徴を修正する"""
-    print(f"--- Tool: modify_palate called with '{palate}' ---")
-
-    current_note = tool_context.state.get("current_tasting_note", TastingAnalysis())
-    current_note.palate = [palate] if isinstance(palate, str) else palate
-    tool_context.state["current_tasting_note"] = current_note
-
-    return {
-        "action": "modify_palate",
-        "palate": palate,
-        "message": f"Updated palate characteristics to: {palate}"
-    }
-
-def modify_finish(finish: Union[str, List[str]], tool_context: ToolContext) -> dict:
-    """余韻の特徴を修正する"""
-    print(f"--- Tool: modify_finish called with '{finish}' ---")
-
-    current_note = tool_context.state.get("current_tasting_note", TastingAnalysis())
-    current_note.finish = [finish] if isinstance(finish, str) else finish
-    tool_context.state["current_tasting_note"] = current_note
-
-    return {
-        "action": "modify_finish",
-        "finish": finish,
-        "message": f"Updated finish characteristics to: {finish}"
-    }
+NoteTypeStr = Literal["nose", "palate", "finish"]
 
 def modify_rating(rating: float, tool_context: ToolContext) -> dict:
-    """評価を修正する"""
+    """評価を修正する
+
+    Args:
+        rating: 評価値（1.0から5.0の範囲の浮動小数点数）
+        tool_context: セッションステートにアクセスするためのコンテキスト
+
+    Returns:
+        更新結果の確認メッセージを含む辞書
+        {
+            "action": "modify_rating",
+            "rating": float,
+            "message": str
+        }
+
+    Raises:
+        ValueError: ratingが1.0から5.0の範囲外の場合
+    """
     print(f"--- Tool: modify_rating called with {rating} ---")
 
     if not (1.0 <= rating <= 5.0):
@@ -64,9 +32,12 @@ def modify_rating(rating: float, tool_context: ToolContext) -> dict:
             "message": "Rating must be between 1.0 and 5.0"
         }
 
-    current_note = tool_context.state.get("current_tasting_note", TastingAnalysis())
-    current_note.rating = rating
-    tool_context.state["current_tasting_note"] = current_note
+    # ステートの完全なコピーを作成
+    updated_tasting_note = dict(tool_context.state["tasting_note"])
+    updated_tasting_note["rating"] = rating
+
+    # 新しいステートで更新
+    tool_context.state["tasting_note"] = updated_tasting_note
 
     return {
         "action": "modify_rating",
@@ -74,21 +45,185 @@ def modify_rating(rating: float, tool_context: ToolContext) -> dict:
         "message": f"Updated rating to: {rating}"
     }
 
+
 def view_tasting_note(tool_context: ToolContext) -> dict:
-    """現在のテイスティングノートを表示する"""
+    """現在のテイスティングノートを表示する
+
+    Args:
+        tool_context: セッションステートにアクセスするためのコンテキスト
+
+    Returns:
+        現在のテイスティングノートの内容
+    """
     print("--- Tool: view_tasting_note called ---")
 
-    note = tool_context.state.get("current_tasting_note", TastingAnalysis())
+    tasting_note = tool_context.state.get("tasting_note", {})
 
     return {
         "action": "view_tasting_note",
-        "note": note.dict(),
-        "message": f"""Current tasting note:
-        Nose: {', '.join(note.nose)}
-        Palate: {', '.join(note.palate)}
-        Finish: {', '.join(note.finish)}
-        Rating: {note.rating}"""
-    }
+        "tasting_note": tasting_note,
+        "message": f"""
+    香り: {', '.join(tasting_note.get('nose', []))}
+    味わい: {', '.join(tasting_note.get('palate', []))}
+    余韻: {', '.join(tasting_note.get('finish', []))}
+    評価: {tasting_note.get('rating', 0.0)}
+    """
+        }
+
+def add_note_characteristic(
+    note_type: NoteTypeStr,
+    characteristic: str,
+    tool_context: ToolContext
+) -> dict:
+    """テイスティングノートの特徴を追加する
+
+    Args:
+        note_type: 特徴の種類（"nose"/"palate"/"finish"のいずれか）
+        characteristic: 追加する特徴
+        tool_context: セッションステートにアクセスするためのコンテキスト
+
+    Returns:
+        更新結果の確認メッセージを含む辞書
+    """
+    print(f"--- Tool: add_note_characteristic called for {note_type} with '{characteristic}' ---")
+
+    if note_type not in ["nose", "palate", "finish"]:
+        return {
+            "action": "add_note_characteristic",
+            "status": "error",
+            "message": f"Invalid note type: {note_type}. Must be one of: nose, palate, finish"
+        }
+
+    # ステートの完全なコピーを作成
+    updated_tasting_note = dict(tool_context.state["tasting_note"])
+
+    # 現在の特徴リストを取得し、新しい特徴を追加
+    current_notes = updated_tasting_note.get(note_type, [])
+    if characteristic not in current_notes:  # 重複を防ぐ
+        current_notes.append(characteristic)
+        updated_tasting_note[note_type] = current_notes
+
+        # 新しいステートで更新
+        tool_context.state["tasting_note"] = updated_tasting_note
+
+        return {
+            "action": "add_note_characteristic",
+            "note_type": note_type,
+            "characteristic": characteristic,
+            "message": f"Added '{characteristic}' to {note_type} characteristics"
+        }
+    else:
+        return {
+            "action": "add_note_characteristic",
+            "status": "error",
+            "message": f"'{characteristic}' is already in {note_type} characteristics"
+        }
+
+def remove_note_characteristic(
+    note_type: NoteTypeStr,
+    characteristic: str,
+    tool_context: ToolContext
+) -> dict:
+    """テイスティングノートの特徴を削除する
+
+    Args:
+        note_type: 特徴の種類（"nose"/"palate"/"finish"のいずれか）
+        characteristic: 削除する特徴
+        tool_context: セッションステートにアクセスするためのコンテキスト
+
+    Returns:
+        更新結果の確認メッセージを含む辞書
+    """
+    print(f"--- Tool: remove_note_characteristic called for {note_type} with '{characteristic}' ---")
+
+    if note_type not in ["nose", "palate", "finish"]:
+        return {
+            "action": "remove_note_characteristic",
+            "status": "error",
+            "message": f"Invalid note type: {note_type}. Must be one of: nose, palate, finish"
+        }
+
+    # ステートの完全なコピーを作成
+    updated_tasting_note = dict(tool_context.state["tasting_note"])
+
+    # 現在の特徴リストを取得
+    current_notes = updated_tasting_note.get(note_type, [])
+
+    if characteristic in current_notes:
+        current_notes.remove(characteristic)
+        updated_tasting_note[note_type] = current_notes
+
+        # 新しいステートで更新
+        tool_context.state["tasting_note"] = updated_tasting_note
+
+        return {
+            "action": "remove_note_characteristic",
+            "note_type": note_type,
+            "characteristic": characteristic,
+            "message": f"Removed '{characteristic}' from {note_type} characteristics"
+        }
+    else:
+        return {
+            "action": "remove_note_characteristic",
+            "status": "error",
+            "message": f"'{characteristic}' not found in {note_type} characteristics"
+        }
+
+def update_note_characteristic(
+    note_type: NoteTypeStr,
+    old_characteristic: str,
+    new_characteristic: str,
+    tool_context: ToolContext
+) -> dict:
+    """テイスティングノートの特徴を変更する
+
+    Args:
+        note_type: 特徴の種類（"nose"/"palate"/"finish"のいずれか）
+        old_characteristic: 変更前の特徴
+        new_characteristic: 変更後の特徴
+        tool_context: セッションステートにアクセスするためのコンテキスト
+
+    Returns:
+        更新結果の確認メッセージを含む辞書
+    """
+    print(f"--- Tool: update_note_characteristic called for {note_type}: '{old_characteristic}' -> '{new_characteristic}' ---")
+
+    if note_type not in ["nose", "palate", "finish"]:
+        return {
+            "action": "update_note_characteristic",
+            "status": "error",
+            "message": f"Invalid note type: {note_type}. Must be one of: nose, palate, finish"
+        }
+
+    # ステートの完全なコピーを作成
+    updated_tasting_note = dict(tool_context.state["tasting_note"])
+
+    # 現在の特徴リストを取得
+    current_notes = updated_tasting_note.get(note_type, [])
+
+    if old_characteristic in current_notes:
+        # インデックスを取得して更新
+        index = current_notes.index(old_characteristic)
+        current_notes[index] = new_characteristic
+        updated_tasting_note[note_type] = current_notes
+
+        # 新しいステートで更新
+        tool_context.state["tasting_note"] = updated_tasting_note
+
+        return {
+            "action": "update_note_characteristic",
+            "note_type": note_type,
+            "old_characteristic": old_characteristic,
+            "new_characteristic": new_characteristic,
+            "message": f"Updated {note_type} characteristic from '{old_characteristic}' to '{new_characteristic}'"
+        }
+    else:
+        return {
+            "action": "update_note_characteristic",
+            "status": "error",
+            "message": f"'{old_characteristic}' not found in {note_type} characteristics"
+        }
+
 
 tasting_note_modifier = Agent(
     name="tasting_note_modifier",
@@ -96,42 +231,50 @@ tasting_note_modifier = Agent(
     description="ウイスキーのテイスティングノート修正の専門家",
     instruction="""
     あなたはウイスキーのテイスティングノートを修正する専門家です。
+    ユーザーの要望に応じて、既存のテイスティングノートを適切に修正します。
 
-    テイスティングノートの情報は状態として保存されています：
-    - 香り (Nose)
-    - 味わい (Palate)
-    - 余韻 (Finish)
-    - 評価 (Rating)
+    【テイスティングノートの構成】
+    テイスティングノートは以下の4つの要素で構成されています
+    1. 香り (Nose) - ウイスキーから感じられる香りの特徴
+    2. 味わい (Palate) - 口に含んだ時の味わいの特徴
+    3. 余韻 (Finish) - 飲み込んだ後に残る余韻の特徴
+    4. 評価 (Rating) - 総合的な評価（1.0-5.0）
 
-    以下の機能を使用してテイスティングノートを修正できます：
-    1. 香りの修正 (modify_nose)
-    2. 味わいの修正 (modify_palate)
-    3. 余韻の修正 (modify_finish)
-    4. 評価の修正 (modify_rating)
-    5. 現在のノートの表示 (view_tasting_note)
+    【修正可能な項目と入力形式】
+    1. 香り・味わい・余韻の特徴:
+       - 文字列または文字列のリストで指定
+       - 例: "バニラ" または ["バニラ", "スパイシー", "フルーティー"]
+       - 具体的で専門的な表現を使用
 
-    **修正のガイドライン:**
-
-    1. 各特徴（香り、味わい、余韻）の修正:
-       - 単一の特徴または特徴のリストとして指定可能
-       - 例: "バニラ" または ["バニラ", "スパイシー"]
-
-    2. 評価の修正:
+    2. 評価:
        - 1.0から5.0の範囲で指定（0.5刻み）
-       - 範囲外の値は受け付けない
+       - 例: 3.5, 4.0, 4.5
+       - 範囲外の値は受け付けません
 
-    3. 表示:
-       - view_tasting_noteを使用して現在のノートを確認
-       - 修正前後で内容を確認することを推奨
+    【使用可能なツール】
+    1. modify_nose: 香りの特徴を修正
+    2. modify_palate: 味わいの特徴を修正
+    3. modify_finish: 余韻の特徴を修正
+    4. modify_rating: 評価を修正
+    5. view_tasting_note: 現在のテイスティングノートを表示
 
-    常に専門的な観点から適切な修正を行い、
-    修正後は変更内容を明確に説明してください。
+    【修正プロセス】
+    1. まず view_tasting_note で現在の内容を確認
+    2. 必要な修正を実行
+    3. 再度 view_tasting_note で修正結果を確認
+    4. 修正内容を明確に説明
+
+    【注意事項】
+    - 常にウイスキーの専門家としての視点を保持
+    - 具体的で正確な表現を使用
+    - 修正前後の変更点を明確に説明
+    - 一貫性のある評価を心がける
     """,
     tools=[
-        modify_nose,
-        modify_palate,
-        modify_finish,
-        modify_rating,
         view_tasting_note,
+        modify_rating,
+        add_note_characteristic,
+        remove_note_characteristic,
+        update_note_characteristic,
     ]
 )
