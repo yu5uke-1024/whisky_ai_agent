@@ -1,78 +1,40 @@
 from google.adk.agents import Agent
 from google.adk.tools.agent_tool import AgentTool
-# from .storage.firestore import FirestoreClient
-from .models.whisky import WhiskyInfo
-from .models.tasting import TastingNote
+from .storage.firestore import FirestoreClient # FirestoreClientをインポート
 from .sub_agents.image_analyst import image_analyst
 from .sub_agents.tasting_note_analyst import tasting_note_analyst
 from .prompts import INSTRUCTION
 
 # Firestoreクライアントのインスタンスを作成
-# firestore_client = FirestoreClient()
-
-async def save_whisky_info(whisky_info: dict) -> dict:
-    """ウイスキー情報を保存するツール"""
-    try:
-        whisky = WhiskyInfo(
-            name=whisky_info.get('brand', '不明'),
-            image_analysis=whisky_info
-        )
-        # whisky_id = await firestore_client.save_whisky(whisky)
-        whisky_id = "123"
-        return {
-            "status": "success",
-            "whisky_id": whisky_id,
-            "message": "ウイスキー情報を保存しました"
-        }
-    except Exception as e:
-        return {"status": "error", "error": str(e)}
-
-async def save_tasting_note(note_info: dict) -> dict:
-    """テイスティングノートを保存するツール"""
-    try:
-        note = TastingNote(
-            whisky_id=note_info['whisky_id'],
-            nose=note_info.get('nose', []),
-            palate=note_info.get('palate', []),
-            finish=note_info.get('finish', []),
-            rating=note_info.get('rating'),
-            memo=note_info.get('memo')
-        )
-        # note_id = await firestore_client.save_tasting_note(note)
-        note_id = "123"
-        return {
-            "status": "success",
-            "note_id": note_id,
-            "message": "テイスティングノートを保存しました"
-        }
-    except Exception as e:
-        return {"status": "error", "error": str(e)}
+firestore_client = FirestoreClient()
 
 async def get_whisky_history() -> dict:
-    """ウイスキーの履歴を取得するツール"""
+    """
+    Firestoreからウイスキーの履歴を取得するツール。
+    これまでに保存されたウイスキー情報をリストで返します。
+    """
     try:
-        # history = await firestore_client.get_whisky_history()
-        history = []
+        # Firestoreからウイスキーの履歴を取得
+        history = await firestore_client.get_whisky_history()
         return {
             "status": "success",
-            "history": [whisky.model_dump() for whisky in history]
+            "history": [whisky.model_dump() for whisky in history] # モデルを辞書形式に変換
         }
     except Exception as e:
+        # エラーが発生した場合は、エラーメッセージを返す
         return {"status": "error", "error": str(e)}
 
+# ルートエージェントの定義
 root_agent = Agent(
     name="whisky_agent",
-    model="gemini-2.5-flash-preview-05-20",
-    description="Whisky analysis coordinator with clear agent delegation rules",
-    instruction=INSTRUCTION,
+    model="gemini-2.0-flash-lite",
+    description="ウイスキー情報の統括コーディネーター。明確なエージェント委譲ルールに基づきタスクを調整します。",
+    instruction=INSTRUCTION, # エージェントの指示プロンプト
     sub_agents=[
-        image_analyst,
+        image_analyst, # 画像解析サブエージェント
+        tasting_note_analyst, # テイスティングノート分析サブエージェント
     ],
     tools=[
-        save_whisky_info,
-        save_tasting_note,
-        get_whisky_history,
-        AgentTool(tasting_note_analyst),
-        # AgentTool(image_analyst),
+        get_whisky_history, # ウイスキー履歴取得ツール
     ],
 )
