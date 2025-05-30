@@ -6,4 +6,4 @@ gunicorn
 google-generativeai
 google-cloud-firestore
 urllib3<2
-google-adk=1.1.1
+google-adk
