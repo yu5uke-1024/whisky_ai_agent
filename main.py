@@ -52,25 +52,21 @@ async def main_async():
     print("終了するには 'exit' または 'quit' と入力してください。\n")
 
     while True:
-        try:
-            # ユーザー入力の受け取り
-            user_input = input("あなた: ")
+        print("\n🗨️ Enter your query (or 'exit' to quit):")
+        user_query = input("Query: ").strip()
+        if user_query.lower() == "exit":
+            break
 
-            # 終了判定
-            if user_input.lower() in ["exit", "quit"]:
-                print("会話を終了します。ありがとうございました！")
-                break
+        image_path = input("Image path (optional): ").strip()
+        if image_path == "":
+            image_path = None
 
-            # 履歴への追加
-            await add_user_query_to_history(
-                session_service, APP_NAME, USER_ID, SESSION_ID, user_input
-            )
+        # 履歴への追加
+        await add_user_query_to_history(session_service, APP_NAME, USER_ID, SESSION_ID, user_query)
 
-            # エージェントの実行
-            await call_agent_async(runner, USER_ID, SESSION_ID, user_input)
+        # エージェントの実行
+        await call_agent_async(runner, USER_ID, SESSION_ID, query = user_query, image_path=image_path)
 
-        except Exception as e:
-            print(f"エラーが発生しました: {e}")
 
     # 最終セッション状態の表示
     final_session = await session_service.get_session(
