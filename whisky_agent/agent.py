@@ -27,7 +27,7 @@ async def get_whisky_history() -> dict:
 # ルートエージェントの定義
 root_agent = Agent(
     name="whisky_agent",
-    model="gemini-2.0-flash-lite",
+    model="gemini-2.5-flash-preview-04-17",
     description="ウイスキー情報の統括コーディネーター。明確なエージェント委譲ルールに基づきタスクを調整します。",
     instruction=INSTRUCTION, # エージェントの指示プロンプト
     sub_agents=[
