@@ -1,5 +1,5 @@
 from datetime import datetime
-
+import base64
 from google.genai import types
 
 
@@ -71,6 +71,7 @@ async def update_interaction_history(session_service, app_name, user_id, session
         )
     except Exception as e:
         print(f"Error updating interaction history: {e}")
+
 
 
 async def add_user_query_to_history(session_service, app_name, user_id, session_id, query):
@@ -196,10 +197,26 @@ async def process_agent_response(event):
 
     return None
 
+def create_content_parts(query: str, image_path: str = None):
+    parts = [types.Part(text=query)]
+    if image_path:
+        with open(image_path, "rb") as img_file:
+            image_bytes = img_file.read()
+            image_b64 = base64.b64encode(image_bytes).decode("utf-8")
+            parts.append(
+                types.Part(
+                    inline_data=types.Blob(
+                        mime_type="image/jpeg",  # or image/png
+                        data=image_b64,
+                    )
+                )
+            )
+    return parts
 
-async def call_agent_async(runner, user_id, session_id, query):
+async def call_agent_async(runner, user_id, session_id, query:str, image_path:str = None):
     """Call the agent asynchronously with the user's query."""
-    content = types.Content(role="user", parts=[types.Part(text=query)])
+    parts = create_content_parts(query, image_path)
+    content = types.Content(role="user", parts=parts)
     print(
         f"\n{Colors.BG_GREEN}{Colors.BLACK}{Colors.BOLD}--- Running Query: {query} ---{Colors.RESET}"
     )
