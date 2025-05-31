@@ -1,3 +1,4 @@
+from typing import Optional
 from google.adk.agents import Agent
 from google.adk.tools.agent_tool import AgentTool
 from .storage.firestore import FirestoreClient # FirestoreClientをインポート

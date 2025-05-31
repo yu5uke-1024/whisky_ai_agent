@@ -2,6 +2,7 @@ from google.adk.agents import Agent
 from google.adk.tools.tool_context import ToolContext
 from typing import Dict, Any, List, Union, Literal
 from ...models import TastingAnalysis
+from .....storage.firestore import FirestoreClient
 
 NoteTypeStr = Literal["nose", "palate", "finish"]
 
@@ -224,6 +225,30 @@ def update_note_characteristic(
             "message": f"'{old_characteristic}' not found in {note_type} characteristics"
         }
 
+def save_tasting_note_to_firestore(tool_context: ToolContext) -> dict:
+    """テイスティングノートをFirestoreに保存する
+
+    Args:
+        tool_context: セッションステートにアクセスするためのコンテキスト
+
+    Returns:
+        保存結果の確認メッセージを含む辞書
+    """
+    # ユーザーIDをtool_contextまたはセッションステートから取得
+    user_id = tool_context.user_id if hasattr(tool_context, 'user_id') else "default_user_id"
+
+    print(f"--- Tool: save_tasting_note_to_firestore called for user {user_id} ---")
+
+    tasting_note = tool_context.state.get("tasting_note", {})
+
+    # Firestoreクライアントを使用してテイスティングノートを保存
+    firestore_client = FirestoreClient()
+    firestore_client.save_tasting_note(user_id, tasting_note)
+
+    return {
+        "action": "save_tasting_note_to_firestore",
+        "message": f"Tasting note saved to Firestore for user {user_id}"
+    }
 
 tasting_note_modifier = Agent(
     name="tasting_note_modifier",
@@ -257,12 +282,14 @@ tasting_note_modifier = Agent(
     3. modify_finish: 余韻の特徴を修正
     4. modify_rating: 評価を修正
     5. view_tasting_note: 現在のテイスティングノートを表示
+    6. save_tasting_note_to_firestore: 現在のテイスティングノートをFirestoreに保存
 
     【修正プロセス】
     1. まず view_tasting_note で現在の内容を確認
     2. 必要な修正を実行
     3. 再度 view_tasting_note で修正結果を確認
     4. 修正内容を明確に説明
+    5. save_tasting_note_to_firestore でFirestoreに保存
 
     【注意事項】
     - 常にウイスキーの専門家としての視点を保持
@@ -276,5 +303,6 @@ tasting_note_modifier = Agent(
         add_note_characteristic,
         remove_note_characteristic,
         update_note_characteristic,
+        save_tasting_note_to_firestore,
     ]
 )
