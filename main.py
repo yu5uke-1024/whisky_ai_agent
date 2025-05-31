@@ -14,16 +14,26 @@ load_dotenv()
 session_service = InMemorySessionService()
 artifact_service = InMemoryArtifactService()
 
-# 初期状態の設定
-initial_state = {
-    "user_name": "ゆーすけ",
-    "interaction_history": [],
-}
-
 async def main_async():
+    # ユーザー情報の入力
+    print("=== Whisky Assistant ===\n")
+    user_id = input("ユーザーIDを入力してください: ").strip()
+    if not user_id:
+        user_id = "default_user"
+    
+    user_name = input("ユーザー名を入力してください: ").strip()
+    if not user_name:
+        user_name = "ユーザー"
+    
+    # 初期状態の設定
+    initial_state = {
+        "user_name": user_name,
+        "interaction_history": [],
+    }
+
     # 新しいセッションの作成
     APP_NAME = "Whisky Assistant"
-    USER_ID = "default_user"
+    USER_ID = user_id
     new_session = await session_service.create_session(
         app_name=APP_NAME,
         user_id=USER_ID,

@@ -30,44 +30,49 @@ session_service = InMemorySessionService()
 artifact_service = InMemoryArtifactService()
 runner = None
 APP_NAME = "Whisky Assistant"
-USER_ID = "default_user"
-SESSION_ID = None
 
-# 初期状態の設定
-initial_state = {
-    "user_name": "ユーザー",
-    "interaction_history": [],
-}
+# ユーザーごとのセッション管理
+user_sessions = {}
 
-async def initialize_session():
-    """セッションとランナーを初期化"""
-    global runner, SESSION_ID
+async def get_or_create_session(user_id: str, user_name: str):
+    """ユーザーごとのセッションを取得または作成"""
+    global runner
     
     if runner is None:
-        # 新しいセッションの作成
-        new_session = await session_service.create_session(
-            app_name=APP_NAME,
-            user_id=USER_ID,
-            state=initial_state,
-        )
-        SESSION_ID = new_session.id
-        
-        # Runnerの初期化
+        # Runnerの初期化（一度だけ）
         runner = Runner(
             agent=root_agent,
             app_name=APP_NAME,
             session_service=session_service,
             artifact_service=artifact_service,
         )
+    
+    # ユーザーのセッションが存在しない場合は作成
+    if user_id not in user_sessions:
+        initial_state = {
+            "user_name": user_name,
+            "interaction_history": [],
+        }
+        
+        new_session = await session_service.create_session(
+            app_name=APP_NAME,
+            user_id=user_id,
+            state=initial_state,
+        )
+        user_sessions[user_id] = new_session.id
+    
+    return user_sessions[user_id]
 
 @app.on_event("startup")
 async def startup_event():
     """アプリケーション起動時の初期化"""
-    await initialize_session()
+    pass  # 必要に応じて初期化処理を追加
 
 @app.post("/chat")
 async def chat_endpoint(
     query: str = Form(...),
+    user_id: str = Form(...),
+    user_name: str = Form(...),
     image: Optional[UploadFile] = File(None)
 ):
     """
@@ -81,9 +86,8 @@ async def chat_endpoint(
         JSON形式の応答 {"response": "..."}
     """
     try:
-        # セッションが初期化されていない場合は初期化
-        if runner is None or SESSION_ID is None:
-            await initialize_session()
+        # ユーザーのセッションを取得または作成
+        session_id = await get_or_create_session(user_id, user_name)
         
         image_path = None
         
@@ -105,12 +109,12 @@ async def chat_endpoint(
         
         # ユーザークエリを履歴に追加
         await add_user_query_to_history(
-            session_service, APP_NAME, USER_ID, SESSION_ID, query
+            session_service, APP_NAME, user_id, session_id, query
         )
         
         # エージェントを呼び出し
         response = await call_agent_async(
-            runner, USER_ID, SESSION_ID, query=query, image_path=image_path
+            runner, user_id, session_id, query=query, image_path=image_path
         )
         
         # 一時ファイルを削除
