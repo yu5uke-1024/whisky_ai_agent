@@ -29,7 +29,7 @@ TASTING_NOTE_ANALYST_INSTRUCTION = """
        ↓
     4. 修正後の内容確認（tasting_note_modifierのview_tasting_note）
        ↓
-    5. 保存の確認
+    5. 保存の確認 (tasting_note_modifierのsave_tasting_note_to_firestore)
 
     テイスティングノートの文章化例:
     このウイスキーは、フルーツのような香りが強いです。
@@ -38,6 +38,7 @@ TASTING_NOTE_ANALYST_INSTRUCTION = """
 
     重要な注意点：
     - テイスティングノートの内容確認が要求された場合は、必ずtasting_note_modifierのview_tasting_noteツールを使用してください。
+    - テイスティングノートの保存は必ずtasting_note_modifierのsave_tasting_note_to_firestoreツールを使用してください。
     - 修正後は必ず最新の内容を表示し、ユーザーに確認を求めてください。
     - 各ステップで適切なツールを使用し、ユーザーに分かりやすく結果を提示してください。
 """
