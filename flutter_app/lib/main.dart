@@ -5,9 +5,17 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/services.dart';
 
 void main() {
   runApp(const WhiskyChatApp());
+}
+
+class UserInfo {
+  final String userId;
+  final String userName;
+
+  UserInfo({required this.userId, required this.userName});
 }
 
 class WhiskyChatApp extends StatelessWidget {
@@ -21,7 +29,7 @@ class WhiskyChatApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.amber),
         useMaterial3: true,
       ),
-      home: const ChatScreen(),
+      home: const LoginScreen(),
     );
   }
 }
@@ -40,8 +48,140 @@ class ChatMessage {
   });
 }
 
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final TextEditingController _userIdController = TextEditingController();
+  final TextEditingController _userNameController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  void dispose() {
+    _userIdController.dispose();
+    _userNameController.dispose();
+    super.dispose();
+  }
+
+  void _login() {
+    if (_formKey.currentState!.validate()) {
+      final userInfo = UserInfo(
+        userId: _userIdController.text.trim(),
+        userName: _userNameController.text.trim(),
+      );
+      
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => ChatScreen(userInfo: userInfo),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Whisky Chat Assistant'),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+      ),
+      body: Center(
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 400),
+          padding: const EdgeInsets.all(24),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.local_bar,
+                  size: 80,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(height: 32),
+                const Text(
+                  'ウイスキーチャットアシスタント',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'ユーザー情報を入力してください',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 32),
+                TextFormField(
+                  controller: _userIdController,
+                  decoration: const InputDecoration(
+                    labelText: 'ユーザーID',
+                    hintText: 'user123',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.person),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'ユーザーIDを入力してください';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _userNameController,
+                  decoration: const InputDecoration(
+                    labelText: 'ユーザー名',
+                    hintText: '田中太郎',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.badge),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'ユーザー名を入力してください';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 32),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: _login,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                    ),
+                    child: const Text(
+                      'チャットを開始',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class ChatScreen extends StatefulWidget {
-  const ChatScreen({super.key});
+  final UserInfo userInfo;
+  
+  const ChatScreen({super.key, required this.userInfo});
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -159,6 +299,10 @@ class _ChatScreenState extends State<ChatScreen> {
 
       // テキストクエリを追加
       request.fields['query'] = query;
+      
+      // ユーザー情報を追加
+      request.fields['user_id'] = widget.userInfo.userId;
+      request.fields['user_name'] = widget.userInfo.userName;
 
       // 画像ファイルがある場合は追加
       if (file != null && fileBytes != null) {
@@ -309,19 +453,32 @@ class _ChatScreenState extends State<ChatScreen> {
                 tooltip: '画像を選択',
               ),
               Expanded(
-                child: TextField(
-                  controller: _textController,
-                  decoration: const InputDecoration(
-                    hintText: 'ウイスキーについて質問してください...',
-                    border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
+                child: KeyboardListener(
+                  focusNode: FocusNode(),
+                  onKeyEvent: (KeyEvent event) {
+                    if (event is KeyDownEvent) {
+                      final isControlPressed = HardwareKeyboard.instance.isControlPressed;
+                      final isEnterPressed = event.logicalKey == LogicalKeyboardKey.enter;
+                      
+                      if (isControlPressed && isEnterPressed && !_isLoading) {
+                        _sendMessage();
+                      }
+                    }
+                  },
+                  child: TextField(
+                    controller: _textController,
+                    decoration: const InputDecoration(
+                      hintText: 'ウイスキーについて質問してください... (Ctrl+Enterで送信)',
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                     ),
+                    maxLines: null,
+                    enabled: !_isLoading,
+                    onSubmitted: (_) => _sendMessage(),
                   ),
-                  maxLines: null,
-                  enabled: !_isLoading,
-                  onSubmitted: (_) => _sendMessage(),
                 ),
               ),
               const SizedBox(width: 8),
@@ -347,7 +504,16 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Whisky Chat Assistant'),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Whisky Chat Assistant'),
+            Text(
+              '${widget.userInfo.userName} (${widget.userInfo.userId})',
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
+            ),
+          ],
+        ),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
           IconButton(
