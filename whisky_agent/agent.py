@@ -5,6 +5,7 @@ from .storage.firestore import FirestoreClient # FirestoreClientをインポー�
 from .sub_agents.image_analyst import image_analyst
 from .sub_agents.tasting_note_analyst import tasting_note_analyst
 from .prompts import INSTRUCTION
+from google.adk.agents.callback_context import CallbackContext
 
 # Firestoreクライアントのインスタンスを作成
 firestore_client = FirestoreClient()
