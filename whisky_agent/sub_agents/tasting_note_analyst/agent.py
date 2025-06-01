@@ -19,7 +19,7 @@ def save_tasting_note_to_firestore(tool_context: ToolContext) -> dict:
         保存結果の確認メッセージを含む辞書
     """
     # ユーザーIDをtool_contextまたはセッションステートから取得
-    user_id = tool_context.user_id if hasattr(tool_context, 'user_id') else "default_user_id"
+    user_id = tool_context.state.get("user_id", 'default_user_id')
 
     print(f"--- Tool: save_tasting_note_to_firestore called for user {user_id} ---")
 

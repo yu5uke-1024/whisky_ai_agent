@@ -39,7 +39,7 @@ def check_if_agent_should_run(callback_context: CallbackContext) -> Optional[typ
     user_name = callback_context.state.get("user_name", 'ゆうすけ')
     callback_context.state["user_name"] = user_name
 
-    user_id = callback_context.state.get("user_id", '123')
+    user_id = callback_context.state.get("user_id", 'yusuke_1997_10_24')
     callback_context.state["user_id"] = user_id
 
     return None
