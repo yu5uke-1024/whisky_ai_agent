@@ -29,7 +29,7 @@ image_extracter = Agent(
     description="ウイスキーのラベル画像から新規に情報を抽出する専門家",
     instruction=IMAGE_EXTRACTER_INSTRUCTION,
     output_schema=ImageAnalysis,
-    output_key="image_extracter"
+    output_key="whisky_info"
 )
 
 image_extracter_manager = SequentialAgent(
