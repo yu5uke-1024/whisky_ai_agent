@@ -5,6 +5,9 @@ from .storage.firestore import FirestoreClient # FirestoreClientをインポー�
 from .sub_agents.image_analyst import image_analyst
 from .sub_agents.tasting_note_analyst import tasting_note_analyst
 from .prompts import INSTRUCTION
+from google.adk.agents.callback_context import CallbackContext
+from google.adk.tools.tool_context import ToolContext
+from google.genai import types # For types.Content
 
 # Firestoreクライアントのインスタンスを作成
 firestore_client = FirestoreClient()
@@ -25,6 +28,24 @@ async def get_whisky_history() -> dict:
         # エラーが発生した場合は、エラーメッセージを返す
         return {"status": "error", "error": str(e)}
 
+def check_if_agent_should_run(callback_context: CallbackContext) -> Optional[types.Content]:
+    """
+    Logs entry and checks 'skip_llm_agent' in session state.
+    If True, returns Content to skip the agent's execution.
+    If False or not present, returns None to allow execution.
+    """
+    agent_name = callback_context.agent_name
+
+    user_name = callback_context.state.get("user_name", 'Sakamoto Yusuke')
+    callback_context.state["user_name"] = user_name
+
+    user_id = callback_context.state.get("user_id", '123')
+    callback_context.state["user_id"] = user_id
+
+    return None
+
+
+
 # ルートエージェントの定義
 root_agent = Agent(
     name="whisky_agent",
@@ -38,4 +59,5 @@ root_agent = Agent(
     tools=[
         get_whisky_history, # ウイスキー履歴取得ツール
     ],
+    before_agent_callback=check_if_agent_should_run # Assign the callback
 )
