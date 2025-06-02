@@ -7,6 +7,7 @@ from ...storage.firestore import FirestoreClient # FirestoreClientをインポ�
 from .sub_agents.tasting_note_creator import tasting_note_creator
 from .sub_agents.tasting_note_modifier import tasting_note_modifier
 from .prompts import TASTING_NOTE_ANALYST_INSTRUCTION
+from ...models import WhiskyInfo
 
 
 def save_tasting_note_to_firestore(tool_context: ToolContext) -> dict:
@@ -35,6 +36,19 @@ def save_tasting_note_to_firestore(tool_context: ToolContext) -> dict:
     }
 
 
+
+whisky_info_creator = Agent(
+    name="whisky_info_creator",
+    model="gemini-2.5-flash-preview-05-20",
+    description="ウイスキーの情報を作成するエージェント",
+    instruction=TASTING_NOTE_ANALYST_INSTRUCTION,
+    output_schema=WhiskyInfo,
+    output_key="whisky_info",
+    disallow_transfer_to_parent=True,
+    disallow_transfer_to_peers=True,
+)
+
+
 tasting_note_analyst = Agent(
     name="tasting_note_analyst",
     model="gemini-2.5-flash-preview-05-20",
@@ -43,5 +57,6 @@ tasting_note_analyst = Agent(
     tools=[
         AgentTool(tasting_note_creator),
         AgentTool(tasting_note_modifier),
-        save_tasting_note_to_firestore
+        save_tasting_note_to_firestore,
+        AgentTool(whisky_info_creator)
     ])

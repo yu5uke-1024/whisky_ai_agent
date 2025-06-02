@@ -2,7 +2,7 @@ from google.adk.agents import Agent, SequentialAgent
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field, ValidationError
 from .prompts import IMAGE_EXTRACTER_INSTRUCTION
-from ...models import ImageAnalysis
+from .....models import WhiskyInfo
 
 image_extracter_to_user = Agent(
     name="image_extracter_to_user",
@@ -28,9 +28,11 @@ image_extracter = Agent(
     model="gemini-2.0-flash",
     description="ウイスキーのラベル画像から新規に情報を抽出する専門家",
     instruction=IMAGE_EXTRACTER_INSTRUCTION,
-    output_schema=ImageAnalysis,
-    output_key="whisky_info"
-)
+    output_schema=WhiskyInfo,
+    output_key="whisky_info",
+    disallow_transfer_to_parent=True,
+    disallow_transfer_to_peers=True,
+    )
 
 image_extracter_manager = SequentialAgent(
     name="image_extracter_manager",
