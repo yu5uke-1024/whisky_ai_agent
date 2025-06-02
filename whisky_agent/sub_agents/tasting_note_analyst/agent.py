@@ -18,8 +18,8 @@ def save_tasting_note_to_firestore(tool_context: ToolContext) -> dict:
     Returns:
         保存結果の確認メッセージを含む辞書
     """
-    # ユーザーIDをtool_contextまたはセッションステートから取得
-    user_id = tool_context.user_id if hasattr(tool_context, 'user_id') else "default_user_id"
+    user_id = tool_context.state.get("user_id", 'default_user_id')
+    whisky_id = tool_context.state.get("whisky_id", 'default_whisky_id')
 
     print(f"--- Tool: save_tasting_note_to_firestore called for user {user_id} ---")
 
@@ -27,11 +27,11 @@ def save_tasting_note_to_firestore(tool_context: ToolContext) -> dict:
 
     # Firestoreクライアントを使用してテイスティングノートを保存
     firestore_client = FirestoreClient()
-    firestore_client.save_tasting_note(user_id, tasting_note)
+    firestore_client.save_whisky_info(user_id, whisky_id, tasting_note)
 
     return {
         "action": "save_tasting_note_to_firestore",
-        "message": f"Tasting note saved to Firestore for user {user_id}"
+        "message": f"Tasting note saved to Firestore for user {user_id} and whisky {whisky_id}"
     }
 
 

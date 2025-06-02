@@ -19,19 +19,19 @@ def view_image_info(tool_context: ToolContext) -> dict:
     """
     print("--- Tool: view_image_info called ---")
 
-    image_info = tool_context.state.get("image_info", {})
+    whisky_info = tool_context.state.get("whisky_info", {})
 
     return {
         "action": "view_image_info",
-        "image_info": image_info,
+        "whisky_info": whisky_info,
         "message": f"""
-    ブランド: {image_info.get('brand', '')}
-    熟成年数: {image_info.get('age', '')}
-    蒸溜所: {image_info.get('distillery', '')}
-    生産国: {image_info.get('country', '')}
-    地域: {image_info.get('region', '')}
-    種類: {image_info.get('whisky_type', '')}
-    その他: {image_info.get('other', '')}
+    ブランド: {whisky_info.get('brand', '')}
+    熟成年数: {whisky_info.get('age', '')}
+    蒸溜所: {whisky_info.get('distillery', '')}
+    生産国: {whisky_info.get('country', '')}
+    地域: {whisky_info.get('region', '')}
+    種類: {whisky_info.get('whisky_type', '')}
+    その他: {whisky_info.get('other', '')}
     """
     }
 
@@ -67,9 +67,9 @@ def modify_field(field: FieldType, value: str, tool_context: ToolContext) -> dic
             "message": "熟成年数は「年」の単位付きで指定するか、'NAS'を指定してください"
         }
 
-    updated_image_info = dict(tool_context.state.get("image_info", {}))
-    updated_image_info[field] = value
-    tool_context.state["image_info"] = updated_image_info
+    updated_whisky_info = dict(tool_context.state.get("whisky_info", {}))
+    updated_whisky_info[field] = value
+    tool_context.state["whisky_info"] = updated_whisky_info
 
     return {
         "action": "modify_field",
@@ -77,7 +77,6 @@ def modify_field(field: FieldType, value: str, tool_context: ToolContext) -> dic
         "value": value,
         "message": f"{field_names_ja[field]}を '{value}' に更新しました"
     }
-
 
 
 image_modifier = Agent(
