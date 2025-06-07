@@ -1,8 +1,10 @@
-from google.adk.agents import Agent, SequentialAgent
+from google.adk.agents import Agent, SequentialAgent, LlmAgent
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field, ValidationError
 from .prompts import IMAGE_EXTRACTER_INSTRUCTION
 from .....models import WhiskyInfo
+from .....models import create_whisky_id
+
 
 image_extracter_to_user = Agent(
     name="image_extracter_to_user",
@@ -21,6 +23,8 @@ image_extracter_to_user = Agent(
     特徴的な情報: 非常にスモーキー (例)
     この情報を修正・保存しますか？
     """,
+    before_agent_callback=create_whisky_id
+
 )
 
 image_extracter = Agent(

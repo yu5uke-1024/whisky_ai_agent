@@ -1,5 +1,8 @@
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel, Field
+import uuid
+from google.genai import types
+from google.adk.agents.callback_context import CallbackContext
 
 class TastingAnalysis(BaseModel):
     """テイスティングノートの分析結果またはデータ構造"""
@@ -52,3 +55,14 @@ class WhiskyInfo(BaseModel):
         description="その他の特徴的な情報",
         default=""
     )
+
+
+def create_whisky_id(callback_context: CallbackContext) -> Optional[types.Content]:
+    """
+    ウイスキーのIDを作成する
+    """
+    whisky_id = callback_context.state.get("whisky_id", "default_whisky_id")
+    if whisky_id == "default_whisky_id":
+        whisky_id = str(uuid.uuid4())
+        callback_context.state["whisky_id"] = whisky_id
+    return None
