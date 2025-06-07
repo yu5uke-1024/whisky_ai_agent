@@ -25,10 +25,12 @@ def save_tasting_note_to_firestore(tool_context: ToolContext) -> dict:
     print(f"--- Tool: save_tasting_note_to_firestore called for user {user_id} ---")
 
     tasting_note = tool_context.state.get("tasting_note", {})
+    whisky_info = tool_context.state.get("whisky_info", {})
 
     # Firestoreクライアントを使用してテイスティングノートを保存
     firestore_client = FirestoreClient()
     firestore_client.save_whisky_info(user_id, whisky_id, tasting_note)
+    firestore_client.save_whisky_info(user_id, whisky_id, whisky_info)
 
     return {
         "action": "save_tasting_note_to_firestore",
