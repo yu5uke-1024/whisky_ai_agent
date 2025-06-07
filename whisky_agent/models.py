@@ -62,7 +62,11 @@ def create_whisky_id(callback_context: CallbackContext) -> Optional[types.Conten
     ウイスキーのIDを作成する
     """
     whisky_id = callback_context.state.get("whisky_id", "default_whisky_id")
+    callback_context.state["whisky_info"] = {}
+    callback_context.state["tasting_note"] = {}
+
     if whisky_id == "default_whisky_id":
+        ##前の情報を削除する必要あり
         whisky_id = str(uuid.uuid4())
         callback_context.state["whisky_id"] = whisky_id
     return None
