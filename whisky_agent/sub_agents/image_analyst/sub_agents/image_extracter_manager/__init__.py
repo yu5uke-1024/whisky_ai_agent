@@ -1,7 +1,7 @@
 from .agent import (
     image_extracter,
     image_extracter_to_user,
-    image_extracter_manager
+    image_extracter_manager,
 )
 
 __all__ = [

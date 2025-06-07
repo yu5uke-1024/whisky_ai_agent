@@ -8,7 +8,7 @@ from .sub_agents.tasting_note_creator import tasting_note_creator
 from .sub_agents.tasting_note_modifier import tasting_note_modifier
 from .prompts import TASTING_NOTE_ANALYST_INSTRUCTION
 from ...models import WhiskyInfo
-
+from ...models import create_whisky_id
 
 def save_tasting_note_to_firestore(tool_context: ToolContext) -> dict:
     """テイスティングノートをFirestoreに保存する
@@ -46,6 +46,7 @@ whisky_info_creator = Agent(
     output_key="whisky_info",
     disallow_transfer_to_parent=True,
     disallow_transfer_to_peers=True,
+    before_agent_callback=create_whisky_id
 )
 
 
