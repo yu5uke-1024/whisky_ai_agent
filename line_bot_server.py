@@ -30,24 +30,84 @@ artifact_service = InMemoryArtifactService()
 runner = None
 APP_NAME = "Whisky Assistant"
 
-# ユーザーごとのセッション管理
+# グローバルなユーザーごとのセッション管理（永続化）
 user_sessions = {}
+user_session_states = {}  # セッション状態をメモリ内で保持
 
 async def get_or_create_session_for_user(user_id: str, user_name: str = None):
-    """ユーザーごとのADKセッションを取得または作成（統一された方法）"""
+    """ユーザーごとのADKセッションを取得または作成（Firestore永続化対応）"""
     global runner
     
     # Runnerの初期化
     if runner is None:
         runner = await initialize_whisky_agent_system(session_service, artifact_service, APP_NAME)
     
-    # ユーザーのセッションが存在しない場合は作成
+    # ユーザーのセッションが存在しない場合は作成/復元
     if user_id not in user_sessions:
-        print(f"Creating new ADK session for user {user_id}...")
+        print(f"Creating or restoring ADK session for user {user_id}...")
         
-        new_session = await create_or_get_session(session_service, APP_NAME, user_id, user_name)
+        # Firestoreから既存セッションを復元
+        try:
+            from whisky_agent.storage.firestore import FirestoreClient
+            firestore_client = FirestoreClient()
+            existing_session_id, existing_state = firestore_client.get_session_with_id(user_id)
+            
+            if existing_session_id and existing_state:
+                print(f"Restoring session from Firestore: {existing_session_id}")
+                # 既存セッションを復元
+                session = await session_service.create_session(
+                    app_name=APP_NAME,
+                    user_id=user_id,
+                    session_id=existing_session_id,
+                    state=existing_state,
+                )
+                user_sessions[user_id] = session.id
+                user_session_states[user_id] = existing_state
+                print(f"ADK Session restored: {session.id}")
+                return session.id
+        except Exception as e:
+            print(f"Failed to restore session from Firestore: {e}")
+        
+        # 新規セッションを作成
+        initial_state = {
+            "user_name": user_name or f"user_{user_id[-8:]}",
+            "user_id": user_id,
+            "interaction_history": [],
+        }
+        
+        new_session = await session_service.create_session(
+            app_name=APP_NAME,
+            user_id=user_id,
+            state=initial_state,
+        )
         user_sessions[user_id] = new_session.id
-        print(f"ADK Session created: {new_session.id}")
+        user_session_states[user_id] = initial_state
+        
+        # 新規セッションをFirestoreに保存
+        try:
+            from whisky_agent.storage.firestore import FirestoreClient
+            firestore_client = FirestoreClient()
+            firestore_client.save_session_with_id(user_id, new_session.id, initial_state)
+        except Exception as e:
+            print(f"Failed to save new session to Firestore: {e}")
+        
+        print(f"New ADK Session created: {new_session.id}")
+    else:
+        # 既存セッションの状態を確認・更新
+        try:
+            session = await session_service.get_session(
+                app_name=APP_NAME, 
+                user_id=user_id, 
+                session_id=user_sessions[user_id]
+            )
+            # 最新の状態をローカルキャッシュに保存
+            user_session_states[user_id] = session.state
+        except Exception as e:
+            print(f"Error retrieving session state: {e}")
+            # セッションが見つからない場合は再作成
+            if user_id in user_sessions:
+                del user_sessions[user_id]
+            return await get_or_create_session_for_user(user_id, user_name)
     
     return user_sessions[user_id]
 
