@@ -3,7 +3,7 @@ from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.adk.artifacts import InMemoryArtifactService
 from whisky_agent.agent import root_agent
-from utils import add_user_query_to_history, call_agent_async
+from utils import add_user_query_to_history, call_agent_async, create_or_get_session, initialize_whisky_agent_system
 import asyncio
 import os
 
@@ -25,38 +25,25 @@ async def main_async():
     if not user_name:
         user_name = "ユーザー"
     
-    # 初期状態の設定
-    initial_state = {
-        "user_name": user_name,
-        "interaction_history": [],
-    }
-
-    # 新しいセッションの作成
+    # セッションとRunnerの初期化（統一された方法）
     APP_NAME = "Whisky Assistant"
     USER_ID = user_id
-    new_session = await session_service.create_session(
-        app_name=APP_NAME,
-        user_id=USER_ID,
-        state=initial_state,
-    )
-
+    
+    # 統一された関数でセッション作成
+    new_session = await create_or_get_session(session_service, APP_NAME, USER_ID, user_name)
     SESSION_ID = new_session.id
+    
     print(f"--- Examining Session Properties ---")
     print(f"ID (`id`):                {new_session.id}")
     print(f"Application Name (`app_name`): {new_session.app_name}")
     print(f"User ID (`user_id`):         {new_session.user_id}")
-    print(f"State (`state`):           {new_session.state}") # Note: Only shows initial state here
-    print(f"Events (`events`):         {new_session.events}") # Initially empty
+    print(f"State (`state`):           {new_session.state}")
+    print(f"Events (`events`):         {new_session.events}")
     print(f"Last Update (`last_update_time`): {new_session.last_update_time:.2f}")
     print(f"---------------------------------")
 
-    # Runnerの初期化
-    runner = Runner(
-        agent=root_agent,
-        app_name=APP_NAME,
-        session_service=session_service,
-        artifact_service=artifact_service,
-    )
+    # 統一された関数でRunner初期化
+    runner = await initialize_whisky_agent_system(session_service, artifact_service, APP_NAME)
 
     print("\nWhisky Assistant へようこそ!")
     print("終了するには 'exit' または 'quit' と入力してください。\n")

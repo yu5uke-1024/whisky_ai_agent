@@ -268,3 +268,41 @@ async def call_agent_async(runner, user_id, session_id, query:str, image_path:st
 
     print(f"{Colors.YELLOW}{'-' * 30}{Colors.RESET}")
     return final_response_text
+
+
+async def create_or_get_session(session_service, app_name, user_id, user_name=None):
+    """セッションを作成または取得する共通関数"""
+    if user_name is None:
+        user_name = f"user_{user_id[-8:]}" if len(user_id) >= 8 else user_id
+    
+    initial_state = {
+        "user_name": user_name,
+        "interaction_history": [],
+    }
+    
+    session = await session_service.create_session(
+        app_name=app_name,
+        user_id=user_id,
+        state=initial_state,
+    )
+    
+    print(f"Session created: ID={session.id}, User={user_id}, State={session.state}")
+    return session
+
+
+async def initialize_whisky_agent_system(session_service, artifact_service, app_name="Whisky Assistant"):
+    """Whisky Agent システムを初期化する共通関数"""
+    from google.adk.runners import Runner
+    from whisky_agent.agent import root_agent
+    
+    print(f"Initializing Whisky Agent system with app_name: {app_name}")
+    
+    runner = Runner(
+        agent=root_agent,
+        app_name=app_name,
+        session_service=session_service,
+        artifact_service=artifact_service,
+    )
+    
+    print("Whisky Agent system initialized successfully")
+    return runner

@@ -7,7 +7,7 @@ INSTRUCTION = """
 ## サブエージェントが必ず担当するタスク（必ずサブエージェントに転送）
 1. image_analyst
    - 全ての画像解析タスク
-   - 入力: ウイスキーの画像（base64エンコードされた文字列として "image_data" フィールドで渡す）
+   - 入力: ウイスキーの画像（画像データが含まれた場合は自動的に処理）
    - 処理：ブランド、蒸溜所、年数、度数などの情報抽出
 
 2. tasting_note_analyst
@@ -33,7 +33,7 @@ INSTRUCTION = """
 
 # 処理判断フロー
 1. 入力タイプの判別
-   - 画像添付あり → 必ずimage_analystへ。入力は `{"image_data": "base64_string..."}` の形式。
+   - 画像添付あり → 必ずimage_analystへ転送。画像データはそのまま転送される。
    - テイスティングノート関連要求（新規作成、修正、保存、ロード） → tasting_note_analystへ。入力は `tasting_note_analyst` の `input_schema` に従って適切な情報を渡す。
    - 一般的な質問 → あなたが直接回答。
 
