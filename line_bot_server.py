@@ -54,7 +54,7 @@ async def get_or_create_session_for_user(user_id: str, user_name: str = None):
             
             if existing_session_id and existing_state:
                 print(f"Restoring session from Firestore: {existing_session_id}")
-                # 既存セッションを復元
+                # 既存セッションを復元（InMemorySessionServiceに再登録）
                 session = await session_service.create_session(
                     app_name=APP_NAME,
                     user_id=user_id,
@@ -93,20 +93,38 @@ async def get_or_create_session_for_user(user_id: str, user_name: str = None):
         
         print(f"New ADK Session created: {new_session.id}")
     else:
-        # 既存セッションの状態を確認・更新
+        # 既存セッションの状態を確認・更新（Firestoreから最新データを取得）
         try:
-            session = await session_service.get_session(
-                app_name=APP_NAME, 
-                user_id=user_id, 
-                session_id=user_sessions[user_id]
-            )
-            # 最新の状態をローカルキャッシュに保存
-            user_session_states[user_id] = session.state
+            # Firestoreから最新状態を取得
+            from whisky_agent.storage.firestore import FirestoreClient
+            firestore_client = FirestoreClient()
+            _, latest_state = firestore_client.get_session_with_id(user_id)
+            
+            if latest_state:
+                # ADKセッションを最新状態で更新
+                session = await session_service.create_session(
+                    app_name=APP_NAME,
+                    user_id=user_id,
+                    session_id=user_sessions[user_id],
+                    state=latest_state,
+                )
+                user_session_states[user_id] = latest_state
+                print(f"Session state synced from Firestore for user {user_id}")
+            else:
+                # Firestoreに状態がない場合は現在のADKセッション状態を取得
+                session = await session_service.get_session(
+                    app_name=APP_NAME, 
+                    user_id=user_id, 
+                    session_id=user_sessions[user_id]
+                )
+                user_session_states[user_id] = session.state
         except Exception as e:
             print(f"Error retrieving session state: {e}")
             # セッションが見つからない場合は再作成
             if user_id in user_sessions:
                 del user_sessions[user_id]
+                if user_id in user_session_states:
+                    del user_session_states[user_id]
             return await get_or_create_session_for_user(user_id, user_name)
     
     return user_sessions[user_id]
@@ -193,34 +211,24 @@ def handle_text_message(event):
     print(f"Received text message: {event.message.text}")
     
     import asyncio
-    import threading
     
-    def run_async_task():
+    async def process_message():
         try:
             user_id = event.source.user_id
             user_query = event.message.text
             
             print(f"Processing text message with ADK multi-agent - User: {user_id}, Query: {user_query}")
             
-            # 新しいイベントループで実行
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            try:
-                # ADKマルチエージェントシステムで処理
-                response = loop.run_until_complete(
-                    process_with_multi_agent(user_id, user_query)
-                )
-                
-                # LINE Botで返信
-                line_bot_api.reply_message(
-                    event.reply_token,
-                    TextSendMessage(text=f"🥃 {response}")
-                )
-                print(f"ADK multi-agent response sent successfully for user {user_id}")
-                
-            finally:
-                loop.close()
-                
+            # ADKマルチエージェントシステムで処理
+            response = await process_with_multi_agent(user_id, user_query)
+            
+            # LINE Botで返信
+            line_bot_api.reply_message(
+                event.reply_token,
+                TextSendMessage(text=f"🥃 {response}")
+            )
+            print(f"ADK multi-agent response sent successfully for user {user_id}")
+            
         except Exception as e:
             print(f"Error processing text message: {e}")
             import traceback
@@ -233,9 +241,8 @@ def handle_text_message(event):
             except Exception as reply_error:
                 print(f"Failed to send error reply: {reply_error}")
     
-    # 別スレッドで非同期処理を実行
-    thread = threading.Thread(target=run_async_task)
-    thread.start()
+    # 非同期処理を実行（イベントループを再利用）
+    asyncio.create_task(process_message())
 
 @handler.add(MessageEvent, message=ImageMessage)
 def handle_image_message(event):
@@ -243,9 +250,8 @@ def handle_image_message(event):
     print(f"Received image message from user: {event.source.user_id}")
     
     import asyncio
-    import threading
     
-    def run_async_task():
+    async def process_image():
         try:
             user_id = event.source.user_id
             
@@ -257,25 +263,16 @@ def handle_image_message(event):
             
             print(f"Image data retrieved, size: {len(image_data)} bytes")
             
-            # 新しいイベントループで実行
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            try:
-                # ADKマルチエージェントシステムで画像分析
-                response = loop.run_until_complete(
-                    process_with_multi_agent(user_id, "ウイスキーの画像を分析してください", image_data)
-                )
-                
-                # LINE Botで返信
-                line_bot_api.reply_message(
-                    event.reply_token,
-                    TextSendMessage(text=f"📸🥃 {response}")
-                )
-                print(f"ADK multi-agent image analysis response sent successfully for user {user_id}")
-                
-            finally:
-                loop.close()
-                
+            # ADKマルチエージェントシステムで画像分析
+            response = await process_with_multi_agent(user_id, "ウイスキーの画像を分析してください", image_data)
+            
+            # LINE Botで返信
+            line_bot_api.reply_message(
+                event.reply_token,
+                TextSendMessage(text=f"📸🥃 {response}")
+            )
+            print(f"ADK multi-agent image analysis response sent successfully for user {user_id}")
+            
         except Exception as e:
             print(f"Error processing image message: {e}")
             import traceback
@@ -288,9 +285,8 @@ def handle_image_message(event):
             except Exception as reply_error:
                 print(f"Failed to send image error reply: {reply_error}")
     
-    # 別スレッドで非同期処理を実行
-    thread = threading.Thread(target=run_async_task)
-    thread.start()
+    # 非同期処理を実行（イベントループを再利用）
+    asyncio.create_task(process_image())
 
 print("ADK Multi-Agent LINE Bot server loaded successfully")
 
