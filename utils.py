@@ -69,6 +69,24 @@ async def update_interaction_history(session_service, app_name, user_id, session
             session_id=session_id,
             state=updated_state,
         )
+        
+        # Firestoreに状態を保存
+        try:
+            from whisky_agent.storage.firestore import FirestoreClient
+            firestore_client = FirestoreClient()
+            firestore_client.save_session_with_id(user_id, session_id, updated_state)
+        except Exception as firestore_error:
+            print(f"Failed to save state to Firestore: {firestore_error}")
+        
+        # LINEボット環境でローカルステートキャッシュを更新
+        try:
+            from line_bot_server import user_session_states
+            user_session_states[user_id] = updated_state
+            print(f"Updated local session state cache for user {user_id}")
+        except ImportError:
+            # main.py環境では無視
+            pass
+            
     except Exception as e:
         print(f"Error updating interaction history: {e}")
 
@@ -268,3 +286,70 @@ async def call_agent_async(runner, user_id, session_id, query:str, image_path:st
 
     print(f"{Colors.YELLOW}{'-' * 30}{Colors.RESET}")
     return final_response_text
+
+
+async def create_or_get_session(session_service, app_name, user_id, user_name=None):
+    """セッションを作成または取得する共通関数"""
+    if user_name is None:
+        user_name = f"user_{user_id[-8:]}" if len(user_id) >= 8 else user_id
+    
+    # Firestoreから既存の状態を取得を試みる
+    try:
+        from whisky_agent.storage.firestore import FirestoreClient
+        firestore_client = FirestoreClient()
+        existing_session_id, existing_state = firestore_client.get_session_with_id(user_id)
+        
+        if existing_session_id and existing_state:
+            print(f"Found existing session in Firestore for user {user_id}: {existing_session_id}")
+            # 既存セッションを復元
+            session = await session_service.create_session(
+                app_name=app_name,
+                user_id=user_id,
+                session_id=existing_session_id,
+                state=existing_state,
+            )
+            print(f"Session restored: ID={session.id}, User={user_id}")
+            return session
+    except Exception as e:
+        print(f"Failed to load existing session from Firestore: {e}")
+    
+    # 新しいセッションを作成
+    initial_state = {
+        "user_name": user_name,
+        "interaction_history": [],
+    }
+    
+    session = await session_service.create_session(
+        app_name=app_name,
+        user_id=user_id,
+        state=initial_state,
+    )
+    
+    # 新しいセッションをFirestoreに保存
+    try:
+        from whisky_agent.storage.firestore import FirestoreClient
+        firestore_client = FirestoreClient()
+        firestore_client.save_session_with_id(user_id, session.id, initial_state)
+    except Exception as e:
+        print(f"Failed to save new session to Firestore: {e}")
+    
+    print(f"New session created: ID={session.id}, User={user_id}, State={session.state}")
+    return session
+
+
+async def initialize_whisky_agent_system(session_service, artifact_service, app_name="Whisky Assistant"):
+    """Whisky Agent システムを初期化する共通関数"""
+    from google.adk.runners import Runner
+    from whisky_agent.agent import root_agent
+    
+    print(f"Initializing Whisky Agent system with app_name: {app_name}")
+    
+    runner = Runner(
+        agent=root_agent,
+        app_name=app_name,
+        session_service=session_service,
+        artifact_service=artifact_service,
+    )
+    
+    print("Whisky Agent system initialized successfully")
+    return runner
