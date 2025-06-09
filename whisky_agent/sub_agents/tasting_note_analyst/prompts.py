@@ -64,4 +64,7 @@ TASTING_NOTE_ANALYST_INSTRUCTION = """
     - ユーザーがテイスティングノートの保存を明確に希望した場合のみ、save_tasting_note_to_firestoreツールを使用してください。
     - 修正後は必ず最新の内容を表示し、ユーザーに確認を求めてください。
     - 各ステップで適切なツールを使用し、ユーザーに分かりやすく結果を提示してください。
+
+   **対話履歴:**
+   {interaction_history?}
 """

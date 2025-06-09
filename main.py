@@ -20,12 +20,17 @@ async def main_async():
     user_id = input("ユーザーIDを入力してください: ").strip()
     if not user_id:
         user_id = "default_user"
-    
+
     user_name = input("ユーザー名を入力してください: ").strip()
     if not user_name:
         user_name = "ユーザー"
-    
-    # セッションとRunnerの初期化（統一された方法）
+
+    # 初期状態の設定
+    initial_state = {
+        "user_name": user_name,
+        "interaction_history": [],
+    }
+
     APP_NAME = "Whisky Assistant"
     USER_ID = user_id
     
