@@ -1,32 +1,12 @@
 from typing import Optional
 from google.adk.agents import Agent
-from google.adk.tools.agent_tool import AgentTool
-from .storage.firestore import FirestoreClient # FirestoreClientをインポート
 from .sub_agents.image_analyst import image_analyst
 from .sub_agents.tasting_note_analyst import tasting_note_analyst
+from .sub_agents.recommend_agent import recommend_agent
 from .prompts import INSTRUCTION
 from google.adk.agents.callback_context import CallbackContext
-from google.adk.tools.tool_context import ToolContext
 from google.genai import types # For types.Content
 
-# Firestoreクライアントのインスタンスを作成
-firestore_client = FirestoreClient()
-
-async def get_whisky_history() -> dict:
-    """
-    Firestoreからウイスキーの履歴を取得するツール。
-    これまでに保存されたウイスキー情報をリストで返します。
-    """
-    try:
-        # Firestoreからウイスキーの履歴を取得
-        history = await firestore_client.get_whisky_history()
-        return {
-            "status": "success",
-            "history": [whisky.model_dump() for whisky in history] # モデルを辞書形式に変換
-        }
-    except Exception as e:
-        # エラーが発生した場合は、エラーメッセージを返す
-        return {"status": "error", "error": str(e)}
 
 def check_if_agent_should_run(callback_context: CallbackContext) -> Optional[types.Content]:
     """
@@ -55,9 +35,7 @@ root_agent = Agent(
     sub_agents=[
         image_analyst, # 画像解析サブエージェント
         tasting_note_analyst, # テイスティングノート分析サブエージェント
-    ],
-    tools=[
-        get_whisky_history, # ウイスキー履歴取得ツール
+        recommend_agent, # おすすめエージェント
     ],
     before_agent_callback=check_if_agent_should_run # Assign the callback
 )
