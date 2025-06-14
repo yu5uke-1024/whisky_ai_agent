@@ -25,7 +25,6 @@ def check_if_agent_should_run(callback_context: CallbackContext) -> Optional[typ
     return None
 
 
-
 # ルートエージェントの定義
 root_agent = Agent(
     name="whisky_agent",

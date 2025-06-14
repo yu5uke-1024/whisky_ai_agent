@@ -32,7 +32,7 @@ class FirestoreClient:
         if self.db is None:
             print("Firestore is not available, skipping save operation")
             return
-        
+
         try:
             doc_ref = self.db.collection("users").document(user_id).collection("whisky_collection").document(whisky_id)
             doc_ref.set(whisky_info, merge=True)
@@ -45,7 +45,7 @@ class FirestoreClient:
         if self.db is None:
             print("Firestore is not available, returning empty history")
             return []
-        
+
         try:
             if user_id:
                 # 特定ユーザーの履歴を取得
@@ -65,13 +65,13 @@ class FirestoreClient:
         except Exception as e:
             print(f"Failed to get whisky history: {e}")
             return []
-    
+
     def save_conversation_state(self, user_id: str, session_data: dict):
         """会話状態をFirestoreに保存"""
         if self.db is None:
             print("Firestore is not available, skipping conversation state save")
             return
-        
+
         try:
             doc_ref = self.db.collection("user_sessions").document(user_id)
             doc_ref.set({
@@ -81,13 +81,13 @@ class FirestoreClient:
             print(f"Conversation state saved for user {user_id}")
         except Exception as e:
             print(f"Failed to save conversation state: {e}")
-    
+
     def get_conversation_state(self, user_id: str):
         """会話状態をFirestoreから取得"""
         if self.db is None:
             print("Firestore is not available, returning None")
             return None
-        
+
         try:
             doc_ref = self.db.collection("user_sessions").document(user_id)
             doc = doc_ref.get()
@@ -107,7 +107,7 @@ class FirestoreClient:
         if self.db is None:
             print("Firestore is not available, skipping session save")
             return
-        
+
         try:
             doc_ref = self.db.collection("user_sessions").document(user_id)
             doc_ref.set({
@@ -118,13 +118,13 @@ class FirestoreClient:
             print(f"Session saved for user {user_id} with session_id {session_id}")
         except Exception as e:
             print(f"Failed to save session: {e}")
-    
+
     def get_session_with_id(self, user_id: str):
         """セッションIDと共に会話状態をFirestoreから取得"""
         if self.db is None:
             print("Firestore is not available, returning None")
             return None, None
-        
+
         try:
             doc_ref = self.db.collection("user_sessions").document(user_id)
             doc = doc_ref.get()
