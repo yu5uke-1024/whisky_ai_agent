@@ -9,10 +9,17 @@ class FirestoreClient:
     """Firestoreとのデータ連携を管理するクラス"""
 
     def __init__(self):
-        # Cloud Run環境ではデフォルト認証を使用
+        # Cloud Run環境判定：GOOGLE_APPLICATION_CREDENTIALSがローカルファイルを指している場合は無視
         try:
-            # プロジェクトIDを明示的に指定
             project_id = "whisky-ai-project"
+            
+            # Cloud Run環境では環境変数を削除してデフォルト認証を使用
+            credentials_path = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
+            if credentials_path and not os.path.exists(credentials_path):
+                # ファイルが存在しない場合は環境変数をクリア（Cloud Run環境）
+                os.environ.pop('GOOGLE_APPLICATION_CREDENTIALS', None)
+                print("Removed GOOGLE_APPLICATION_CREDENTIALS for Cloud Run environment")
+            
             self.db = firestore.Client(project=project_id)
             print(f"Firestore initialized with project: {project_id}")
         except Exception as e:
