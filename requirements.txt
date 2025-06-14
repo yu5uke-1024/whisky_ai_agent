@@ -6,7 +6,7 @@ gunicorn
 google-generativeai
 google-cloud-firestore
 urllib3<2
-google-adk
+google-adk==1.3.0
 fastapi
 uvicorn[standard]
 python-multipart

@@ -23,8 +23,6 @@ image_extracter_to_user = Agent(
     特徴的な情報: 非常にスモーキー (例)
     この情報を修正・保存しますか？
     """,
-    before_agent_callback=create_whisky_id
-
 )
 
 image_extracter = Agent(
@@ -36,7 +34,10 @@ image_extracter = Agent(
     output_key="whisky_info",
     disallow_transfer_to_parent=True,
     disallow_transfer_to_peers=True,
+    before_agent_callback=create_whisky_id
     )
+
+
 
 image_extracter_manager = SequentialAgent(
     name="image_extracter_manager",
