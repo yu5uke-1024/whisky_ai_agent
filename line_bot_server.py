@@ -34,7 +34,7 @@ APP_NAME = "Whisky Assistant"
 user_sessions = {}
 user_session_states = {}  # セッション状態をメモリ内で保持
 
-async def get_or_create_session_for_user(user_id: str, user_name: str = None):
+async def get_or_create_session_for_user(user_id: str):
     """ユーザーごとのADKセッションを取得または作成（Firestore永続化対応）"""
     global runner
 
@@ -70,7 +70,6 @@ async def get_or_create_session_for_user(user_id: str, user_name: str = None):
 
         # 新規セッションを作成
         initial_state = {
-            "user_name": user_name or f"user_{user_id[-8:]}",
             "user_id": user_id,
             "interaction_history": [],
         }
@@ -125,7 +124,7 @@ async def get_or_create_session_for_user(user_id: str, user_name: str = None):
                 del user_sessions[user_id]
                 if user_id in user_session_states:
                     del user_session_states[user_id]
-            return await get_or_create_session_for_user(user_id, user_name)
+            return await get_or_create_session_for_user(user_id)
 
     return user_sessions[user_id]
 
@@ -225,7 +224,7 @@ def handle_text_message(event):
             # LINE Botで返信
             line_bot_api.reply_message(
                 event.reply_token,
-                TextSendMessage(text=f"🥃 {response}")
+                TextSendMessage(text=f"{response}")
             )
             print(f"ADK multi-agent response sent successfully for user {user_id}")
 
@@ -269,7 +268,7 @@ def handle_image_message(event):
             # LINE Botで返信
             line_bot_api.reply_message(
                 event.reply_token,
-                TextSendMessage(text=f"📸🥃 {response}")
+                TextSendMessage(text=f"{response}")
             )
             print(f"ADK multi-agent image analysis response sent successfully for user {user_id}")
 
