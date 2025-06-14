@@ -1,3 +1,3 @@
-# from .firestore import FirestoreClient
+from .firestore import FirestoreClient
 
-# __all__ = ['FirestoreClient']
+__all__ = ['FirestoreClient']
