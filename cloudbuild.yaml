@@ -1,52 +1,58 @@
+# cloudbuild.yaml
+
 steps:
-  # ビルドとプッシュ
+  # ステップ1: Dockerイメージをビルドし、Artifact Registryにプッシュする
   - name: 'gcr.io/cloud-builders/docker'
     id: 'Build and Push'
     args:
       - 'build'
-      # ▼▼▼ コロン(:)をスラッシュ(/)に修正 ▼▼▼
-      - '-t'
-      - '$_AR_HOSTNAME/$_AR_PROJECT_ID/$_AR_REPOSITORY/$_IMAGE_PATH_IN_REPO/$_SERVICE_NAME:$COMMIT_SHA'
-      - '-t'
-      - '$_AR_HOSTNAME/$_AR_PROJECT_ID/$_AR_REPOSITORY/$_IMAGE_PATH_IN_REPO/$_SERVICE_NAME:latest'
+      # $COMMIT_SHAを使って、Gitのコミットごとに一意のタグを付ける
+      - '--tag'
+      - '${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:${COMMIT_SHA}'
+      # latestタグも付けておくと、キャッシュや最新版の識別に便利
+      - '--tag'
+      - '${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:latest'
+      # ビルドキャッシュを有効にして、2回目以降のビルドを高速化
       - '--cache-from'
-      - '$_AR_HOSTNAME/$_AR_PROJECT_ID/$_AR_REPOSITORY/$_IMAGE_PATH_IN_REPO/$_SERVICE_NAME:latest'
-      # ▲▲▲ ここまでを修正 ▲▲▲
-      - '.'
-      - '-f'
+      - '${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:latest'
+      - '.' # カレントディレクトリをビルドコンテキストにする
+      - '--file'
       - 'Dockerfile'
 
-  # デプロイ
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
-    id: 'Deploy'
+  # ステップ2: ビルドしたイメージをCloud Runにデプロイする
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'Deploy to Cloud Run'
     entrypoint: 'gcloud'
     args:
       - 'run'
       - 'deploy'
-      - '$_SERVICE_NAME'
+      - '${_SERVICE_NAME}'
+      # ステップ1でビルドした、コミットIDでタグ付けされたイメージを指定
+      - '--image=${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:${COMMIT_SHA}'
+      - '--region=${_DEPLOY_REGION}'
       - '--platform=managed'
-      # ▼▼▼ コロン(:)をスラッシュ(/)に修正 ▼▼▼
-      - '--image=$_AR_HOSTNAME/$_AR_PROJECT_ID/$_AR_REPOSITORY/$_IMAGE_PATH_IN_REPO/$_SERVICE_NAME:$COMMIT_SHA'
-      # ▲▲▲ ここを修正 ▲▲▲
-      - '--labels=managed-by=gcp-cloud-build-deploy-cloud-run,commit-sha=$COMMIT_SHA,gcb-build-id=$BUILD_ID,gcb-trigger-id=$_TRIGGER_ID'
-      # ...（以降の引数は変更なし）...
       - '--quiet'
+      # --- deploy.shにあったデプロイ設定をここに集約 ---
+      - '--allow-unauthenticated'
+      - '--memory=1Gi'
+      - '--cpu=1'
+      - '--timeout=300s' # 単位(s)を付けるのが推奨
+      - '--max-instances=10'
 
-# images セクションも同様に修正
+# ビルドしたイメージを明示的に指定（Cloud Buildが自動的にプッシュしてくれる）
 images:
-  # ▼▼▼ コロン(:)をスラッシュ(/)に修正 ▼▼▼
-  - '$_AR_HOSTNAME/$_AR_PROJECT_ID/$_AR_REPOSITORY/$_IMAGE_PATH_IN_REPO/$_SERVICE_NAME:$COMMIT_SHA'
-  - '$_AR_HOSTNAME/$_AR_PROJECT_ID/$_AR_REPOSITORY/$_IMAGE_PATH_IN_REPO/$_SERVICE_NAME:latest'
-  # ▲▲▲ ここまでを修正 ▲▲▲
+  - '${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:${COMMIT_SHA}'
+  - '${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:latest'
 
+# Cloud Buildのオプション
+options:
+  # デフォルトのログバケットを利用する設定（権限問題の回避）
+  # これでもエラーが出る場合は、前回の提案通り専用バケットを指定します
+  logging: CLOUD_LOGGING_ONLY
+
+# 置換される変数
 substitutions:
-  _SERVICE_NAME: whisky-line-bot
-  # ▼▼▼ 新しく変数を追加 ▼▼▼
-  _IMAGE_PATH_IN_REPO: whisky_ai_agent # リポジトリ内のパス
-  # ▲▲▲ ここまでを追加 ▲▲▲
-  _TRIGGER_ID: 9340ae88-3a72-47bc-b13c-d9270fe16680
-  _DEPLOY_REGION: asia-northeast1
-  _AR_HOSTNAME: asia-northeast1-docker.pkg.dev
-  _AR_REPOSITORY: cloud-run-source-deploy
-  _AR_PROJECT_ID: whisky-ai-project
-  _PLATFORM: managed
+  _SERVICE_NAME: 'whisky-line-bot'
+  _DEPLOY_REGION: 'asia-northeast1'
+  _AR_HOSTNAME: 'asia-northeast1-docker.pkg.dev'
+  _AR_REPOSITORY: 'whisky-ai-repo' # deploy.shの指定に合わせました
