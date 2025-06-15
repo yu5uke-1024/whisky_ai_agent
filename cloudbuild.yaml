@@ -55,4 +55,4 @@ substitutions:
   _SERVICE_NAME: 'whisky-line-bot'
   _DEPLOY_REGION: 'asia-northeast1'
   _AR_HOSTNAME: 'asia-northeast1-docker.pkg.dev'
-  _AR_REPOSITORY: 'whisky-ai-repo' # deploy.shの指定に合わせました
+  _AR_REPOSITORY: 'cloud-run-source-deploy'
