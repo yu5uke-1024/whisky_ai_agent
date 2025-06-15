@@ -4,13 +4,14 @@ steps:
     id: 'Build and Push'
     args:
       - 'build'
+      # ▼▼▼ 実際に保存されているイメージのパスに合わせる ▼▼▼
       - '-t'
-      - '$_AR_HOSTNAME/$_AR_PROJECT_ID/$_AR_REPOSITORY/$_SERVICE_NAME:$COMMIT_SHA'
-      # latestタグも付けてキャッシュに利用
+      - '$_AR_HOSTNAME/$_AR_PROJECT_ID/$_AR_REPOSITORY/$_IMAGE_PATH_IN_REPO:$_SERVICE_NAME:$COMMIT_SHA'
       - '-t'
-      - '$_AR_HOSTNAME/$_AR_PROJECT_ID/$_AR_REPOSITORY/$_SERVICE_NAME:latest'
+      - '$_AR_HOSTNAME/$_AR_PROJECT_ID/$_AR_REPOSITORY/$_IMAGE_PATH_IN_REPO:$_SERVICE_NAME:latest'
       - '--cache-from'
-      - '$_AR_HOSTNAME/$_AR_PROJECT_ID/$_AR_REPOSITORY/$_SERVICE_NAME:latest'
+      - '$_AR_HOSTNAME/$_AR_PROJECT_ID/$_AR_REPOSITORY/$_IMAGE_PATH_IN_REPO:$_SERVICE_NAME:latest'
+      # ▲▲▲ ここまでを修正 ▲▲▲
       - '.'
       - '-f'
       - 'Dockerfile'
@@ -24,21 +25,24 @@ steps:
       - 'deploy'
       - '$_SERVICE_NAME'
       - '--platform=managed'
-      - '--image=$_AR_HOSTNAME/$_AR_PROJECT_ID/$_AR_REPOSITORY/$_SERVICE_NAME:$COMMIT_SHA'
+      # ▼▼▼ デプロイするイメージのパスも合わせる ▼▼▼
+      - '--image=$_AR_HOSTNAME/$_AR_PROJECT_ID/$_AR_REPOSITORY/$_IMAGE_PATH_IN_REPO:$_SERVICE_NAME:$COMMIT_SHA'
+      # ▲▲▲ ここを修正 ▲▲▲
       - '--labels=managed-by=gcp-cloud-build-deploy-cloud-run,commit-sha=$COMMIT_SHA,gcb-build-id=$BUILD_ID,gcb-trigger-id=$_TRIGGER_ID'
       - '--region=$_DEPLOY_REGION'
-      # --- deploy.shから持ってきた設定 ---
       - '--allow-unauthenticated'
       - '--memory=1Gi'
       - '--cpu=1'
       - '--timeout=300'
       - '--max-instances=10'
-      # ------------------------------------
       - '--quiet'
 
+# images セクションも同様に修正
 images:
-  - '$_AR_HOSTNAME/$_AR_PROJECT_ID/$_AR_REPOSITORY/$_SERVICE_NAME:$COMMIT_SHA'
-  - '$_AR_HOSTNAME/$_AR_PROJECT_ID/$_AR_REPOSITORY/$_SERVICE_NAME:latest'
+  # ▼▼▼ 実際に保存されているイメージのパスに合わせる ▼▼▼
+  - '$_AR_HOSTNAME/$_AR_PROJECT_ID/$_AR_REPOSITORY/$_IMAGE_PATH_IN_REPO:$_SERVICE_NAME:$COMMIT_SHA'
+  - '$_AR_HOSTNAME/$_AR_PROJECT_ID/$_AR_REPOSITORY/$_IMAGE_PATH_IN_REPO:$_SERVICE_NAME:latest'
+  # ▲▲▲ ここまでを修正 ▲▲▲
 
 options:
   substitutionOption: ALLOW_LOOSE
@@ -46,6 +50,9 @@ options:
 
 substitutions:
   _SERVICE_NAME: whisky-line-bot
+  # ▼▼▼ 新しく変数を追加 ▼▼▼
+  _IMAGE_PATH_IN_REPO: whisky_ai_agent # リポジトリ内のパス
+  # ▲▲▲ ここまでを追加 ▲▲▲
   _TRIGGER_ID: 9340ae88-3a72-47bc-b13c-d9270fe16680
   _DEPLOY_REGION: asia-northeast1
   _AR_HOSTNAME: asia-northeast1-docker.pkg.dev
