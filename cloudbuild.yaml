@@ -4,13 +4,13 @@ steps:
     id: 'Build and Push'
     args:
       - 'build'
-      # ▼▼▼ 実際に保存されているイメージのパスに合わせる ▼▼▼
+      # ▼▼▼ コロン(:)をスラッシュ(/)に修正 ▼▼▼
       - '-t'
-      - '$_AR_HOSTNAME/$_AR_PROJECT_ID/$_AR_REPOSITORY/$_IMAGE_PATH_IN_REPO:$_SERVICE_NAME:$COMMIT_SHA'
+      - '$_AR_HOSTNAME/$_AR_PROJECT_ID/$_AR_REPOSITORY/$_IMAGE_PATH_IN_REPO/$_SERVICE_NAME:$COMMIT_SHA'
       - '-t'
-      - '$_AR_HOSTNAME/$_AR_PROJECT_ID/$_AR_REPOSITORY/$_IMAGE_PATH_IN_REPO:$_SERVICE_NAME:latest'
+      - '$_AR_HOSTNAME/$_AR_PROJECT_ID/$_AR_REPOSITORY/$_IMAGE_PATH_IN_REPO/$_SERVICE_NAME:latest'
       - '--cache-from'
-      - '$_AR_HOSTNAME/$_AR_PROJECT_ID/$_AR_REPOSITORY/$_IMAGE_PATH_IN_REPO:$_SERVICE_NAME:latest'
+      - '$_AR_HOSTNAME/$_AR_PROJECT_ID/$_AR_REPOSITORY/$_IMAGE_PATH_IN_REPO/$_SERVICE_NAME:latest'
       # ▲▲▲ ここまでを修正 ▲▲▲
       - '.'
       - '-f'
@@ -25,28 +25,19 @@ steps:
       - 'deploy'
       - '$_SERVICE_NAME'
       - '--platform=managed'
-      # ▼▼▼ デプロイするイメージのパスも合わせる ▼▼▼
-      - '--image=$_AR_HOSTNAME/$_AR_PROJECT_ID/$_AR_REPOSITORY/$_IMAGE_PATH_IN_REPO:$_SERVICE_NAME:$COMMIT_SHA'
+      # ▼▼▼ コロン(:)をスラッシュ(/)に修正 ▼▼▼
+      - '--image=$_AR_HOSTNAME/$_AR_PROJECT_ID/$_AR_REPOSITORY/$_IMAGE_PATH_IN_REPO/$_SERVICE_NAME:$COMMIT_SHA'
       # ▲▲▲ ここを修正 ▲▲▲
       - '--labels=managed-by=gcp-cloud-build-deploy-cloud-run,commit-sha=$COMMIT_SHA,gcb-build-id=$BUILD_ID,gcb-trigger-id=$_TRIGGER_ID'
-      - '--region=$_DEPLOY_REGION'
-      - '--allow-unauthenticated'
-      - '--memory=1Gi'
-      - '--cpu=1'
-      - '--timeout=300'
-      - '--max-instances=10'
+      # ...（以降の引数は変更なし）...
       - '--quiet'
 
 # images セクションも同様に修正
 images:
-  # ▼▼▼ 実際に保存されているイメージのパスに合わせる ▼▼▼
-  - '$_AR_HOSTNAME/$_AR_PROJECT_ID/$_AR_REPOSITORY/$_IMAGE_PATH_IN_REPO:$_SERVICE_NAME:$COMMIT_SHA'
-  - '$_AR_HOSTNAME/$_AR_PROJECT_ID/$_AR_REPOSITORY/$_IMAGE_PATH_IN_REPO:$_SERVICE_NAME:latest'
+  # ▼▼▼ コロン(:)をスラッシュ(/)に修正 ▼▼▼
+  - '$_AR_HOSTNAME/$_AR_PROJECT_ID/$_AR_REPOSITORY/$_IMAGE_PATH_IN_REPO/$_SERVICE_NAME:$COMMIT_SHA'
+  - '$_AR_HOSTNAME/$_AR_PROJECT_ID/$_AR_REPOSITORY/$_IMAGE_PATH_IN_REPO/$_SERVICE_NAME:latest'
   # ▲▲▲ ここまでを修正 ▲▲▲
-
-options:
-  substitutionOption: ALLOW_LOOSE
-  logging: CLOUD_LOGGING_ONLY
 
 substitutions:
   _SERVICE_NAME: whisky-line-bot
