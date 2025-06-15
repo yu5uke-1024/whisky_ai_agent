@@ -1,7 +1,48 @@
+# ビルド、プッシュ、デプロイのステップを定義
 steps:
+  # Step 1: Dockerイメージをビルド
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'asia-northeast1-docker.pkg.dev/whisky-ai-project/whisky-ai-repo/whisky-line-bot-multi-agent:v1.0', '.']
+    id: 'Build Docker Image'
+    args:
+      - 'build'
+      - '-t'
+      - 'asia-northeast1-docker.pkg.dev/whisky-ai-project/whisky-ai-repo/whisky-line-bot-multi-agent:v1.0'
+      - '.'
+
+  # Step 2: DockerイメージをArtifact Registryにプッシュ
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'asia-northeast1-docker.pkg.dev/whisky-ai-project/whisky-ai-repo/whisky-line-bot-multi-agent:v1.0']
+    id: 'Push Docker Image'
+    args:
+      - 'push'
+      - 'asia-northeast1-docker.pkg.dev/whisky-ai-project/whisky-ai-repo/whisky-line-bot-multi-agent:v1.0'
+
+  # Step 3: Cloud Runサービスにデプロイ
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'Deploy to Cloud Run'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'whisky-line-bot' # SERVICE_NAME
+      - '--image'
+      - 'asia-northeast1-docker.pkg.dev/whisky-ai-project/whisky-ai-repo/whisky-line-bot-multi-agent:v1.0' # IMAGE_URL
+      - '--region'
+      - 'asia-northeast1' # REGION
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--memory'
+      - '1Gi'
+      - '--cpu'
+      - '1'
+      - '--timeout'
+      - '300s'
+      - '--max-instances'
+      - '10'
+
+# ビルドとデプロイに使用するイメージを明記
 images:
   - 'asia-northeast1-docker.pkg.dev/whisky-ai-project/whisky-ai-repo/whisky-line-bot-multi-agent:v1.0'
+
+# タイムアウト設定
+timeout: '1200s'

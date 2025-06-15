@@ -1,33 +1,13 @@
 #!/bin/bash
+# Cloud Build を実行してビルドとデプロイを行うスクリプト
 
-# Cloud Run デプロイスクリプト
+# エラーが発生した場合はスクリプトを終了
 set -e
 
-echo "🚀 Cloud Run デプロイを開始します..."
+echo "🚀 Cloud Build をトリガーして、ビルドとデプロイを開始します..."
 
-# プロジェクト設定
-PROJECT_ID="whisky-ai-project"
-REGION="asia-northeast1"
-SERVICE_NAME="whisky-line-bot"
-IMAGE_NAME="whisky-line-bot-multi-agent"
-REPOSITORY="whisky-ai-repo"
-IMAGE_TAG="v1.0"
+# cloudbuild.yaml の設定を元に、現在のディレクトリをコンテキストとしてCloud Buildジョブをサブミット
+gcloud builds submit --config cloudbuild.yaml .
 
-IMAGE_URL="asia-northeast1-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_NAME}:${IMAGE_TAG}"
-
-echo "📦 Docker イメージをビルド・プッシュしています..."
-gcloud builds submit --config cloudbuild.yaml
-
-echo "🔄 Cloud Run サービスを更新しています..."
-gcloud run deploy $SERVICE_NAME \
-  --image $IMAGE_URL \
-  --region $REGION \
-  --platform managed \
-  --allow-unauthenticated \
-  --memory 1Gi \
-  --cpu 1 \
-  --timeout 300 \
-  --max-instances 10
-
-echo "✅ デプロイが完了しました!"
-echo "🌐 サービスURL: https://whisky-line-bot-940978794346.asia-northeast1.run.app"
+echo "✅ Cloud Build ジョブが正常にサブミットされました。"
+echo "進捗状況は Google Cloud Console の Cloud Build 履歴で確認してください。"
