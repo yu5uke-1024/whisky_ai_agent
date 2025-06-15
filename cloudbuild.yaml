@@ -3,6 +3,24 @@ steps:
     args: ['build', '-t', 'asia-northeast1-docker.pkg.dev/whisky-ai-project/whisky-ai-repo/whisky-line-bot-multi-agent:v1.0', '.']
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'asia-northeast1-docker.pkg.dev/whisky-ai-project/whisky-ai-repo/whisky-line-bot-multi-agent:v1.0']
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk' # gcloud コマンドを使用するためのイメージ
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'whisky-line-bot'
+      - '--image'
+      - 'asia-northeast1-docker.pkg.dev/whisky-ai-project/whisky-ai-repo/whisky-line-bot-multi-agent:v1.0'
+      - '--region'
+      - 'asia-northeast1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--memory'
+      - '1Gi'
+      - '--cpu'
+      - '1'
+      - '--timeout'
 images:
   - 'asia-northeast1-docker.pkg.dev/whisky-ai-project/whisky-ai-repo/whisky-line-bot-multi-agent:v1.0'
 options:
