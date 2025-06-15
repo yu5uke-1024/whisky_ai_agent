@@ -1,9 +1,56 @@
 steps:
+  # ビルドとプッシュ
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'asia-northeast1-docker.pkg.dev/whisky-ai-project/whisky-ai-repo/whisky-line-bot-multi-agent:v1.0', '.']
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'asia-northeast1-docker.pkg.dev/whisky-ai-project/whisky-ai-repo/whisky-line-bot-multi-agent:v1.0']
+    id: 'Build and Push'
+    args:
+      - 'build'
+      - '-t'
+      - '$_AR_HOSTNAME/$_AR_PROJECT_ID/$_AR_REPOSITORY/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA'
+      # latestタグも付けてキャッシュに利用
+      - '-t'
+      - '$_AR_HOSTNAME/$_AR_PROJECT_ID/$_AR_REPOSITORY/$REPO_NAME/$_SERVICE_NAME:latest'
+      - '--cache-from'
+      - '$_AR_HOSTNAME/$_AR_PROJECT_ID/$_AR_REPOSITORY/$REPO_NAME/$_SERVICE_NAME:latest'
+      - '.'
+      - '-f'
+      - 'Dockerfile'
+
+  # デプロイ
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
+    id: 'Deploy'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'services'
+      - 'update'
+      - '$_SERVICE_NAME'
+      - '--platform=managed'
+      - '--image=$_AR_HOSTNAME/$_AR_PROJECT_ID/$_AR_REPOSITORY/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA'
+      - '--labels=managed-by=gcp-cloud-build-deploy-cloud-run,commit-sha=$COMMIT_SHA,gcb-build-id=$BUILD_ID,gcb-trigger-id=$_TRIGGER_ID'
+      - '--region=$_DEPLOY_REGION'
+      # --- deploy.shから持ってきた設定 ---
+      - '--allow-unauthenticated'
+      - '--memory=1Gi'
+      - '--cpu=1'
+      - '--timeout=300'
+      - '--max-instances=10'
+      # ------------------------------------
+      - '--quiet'
+
 images:
-  - 'asia-northeast1-docker.pkg.dev/whisky-ai-project/whisky-ai-repo/whisky-line-bot-multi-agent:v1.0'
+  - '$_AR_HOSTNAME/$_AR_PROJECT_ID/$_AR_REPOSITORY/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA'
+  - '$_AR_HOSTNAME/$_AR_PROJECT_ID/$_AR_REPOSITORY/$REPO_NAME/$_SERVICE_NAME:latest'
+
 options:
-  logging: CLOUD_LOGGING_ONLY # ここを追加
+  substitutionOption: ALLOW_LOOSE
+  logging: CLOUD_LOGGING_ONLY
+
+substitutions:
+  _SERVICE_NAME: whisky-line-bot
+  _TRIGGER_ID: 9340ae88-3a72-47bc-b13c-d9270fe16680
+  _DEPLOY_REGION: asia-northeast1
+  _AR_HOSTNAME: asia-northeast1-docker.pkg.dev
+  _AR_REPOSITORY: cloud-run-source-deploy
+  # $REPO_NAMEは自動的にリポジトリ名が入るので、明示的に定義する必要はありません
+  _AR_PROJECT_ID: whisky-ai-project
+  _PLATFORM: managed
