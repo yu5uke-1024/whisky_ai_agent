@@ -2,7 +2,7 @@
 steps:
   # Step 1: Dockerイメージをビルド
   - name: 'gcr.io/cloud-builders/docker'
-    id: 'build-docker-image'
+    id: 'Build Docker Image'
     args:
       - 'build'
       - '-t'
@@ -11,23 +11,23 @@ steps:
 
   # Step 2: DockerイメージをArtifact Registryにプッシュ
   - name: 'gcr.io/cloud-builders/docker'
-    id: 'push-docker-image'
+    id: 'Push Docker Image'
     args:
       - 'push'
       - 'asia-northeast1-docker.pkg.dev/whisky-ai-project/whisky-ai-repo/whisky-line-bot-multi-agent:v1.0'
 
-  # Step 3: Cloud Runサービスにデプロイ (環境変数を設定)
+  # Step 3: Cloud Runサービスにデプロイ
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    id: 'deploy-to-cloud-run'
+    id: 'Deploy to Cloud Run'
     entrypoint: gcloud
     args:
       - 'run'
       - 'deploy'
-      - 'whisky-line-bot'
+      - 'whisky-line-bot' # SERVICE_NAME
       - '--image'
-      - 'asia-northeast1-docker.pkg.dev/whisky-ai-project/whisky-ai-repo/whisky-line-bot-multi-agent:v1.0'
+      - 'asia-northeast1-docker.pkg.dev/whisky-ai-project/whisky-ai-repo/whisky-line-bot-multi-agent:v1.0' # IMAGE_URL
       - '--region'
-      - 'asia-northeast1'
+      - 'asia-northeast1' # REGION
       - '--platform'
       - 'managed'
       - '--allow-unauthenticated'
@@ -39,8 +39,6 @@ steps:
       - '300s'
       - '--max-instances'
       - '10'
-      # Cloud Buildのトリガーで設定した代入変数を、Cloud Runの環境変数として設定します
-      - '--update-env-vars=GOOGLE_GENAI_USE_VERTEXAI=$_GOOGLE_GENAI_USE_VERTEXAI,GOOGLE_API_KEY=$_GOOGLE_API_KEY,LINE_CHANNEL_ACCESS_TOKEN=$_LINE_CHANNEL_ACCESS_TOKEN,LINE_CHANNEL_SECRET=$_LINE_CHANNEL_SECRET'
 
 # ビルドとデプロイに使用するイメージを明記
 images:
@@ -48,7 +46,5 @@ images:
 
 # タイムアウト設定
 timeout: '1200s'
-
-# ログの保存設定
 options:
   logging: CLOUD_LOGGING_ONLY
