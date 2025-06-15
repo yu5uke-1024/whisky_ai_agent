@@ -5,5 +5,3 @@ steps:
     args: ['push', 'asia-northeast1-docker.pkg.dev/whisky-ai-project/whisky-ai-repo/whisky-line-bot-multi-agent:v1.0']
 images:
   - 'asia-northeast1-docker.pkg.dev/whisky-ai-project/whisky-ai-repo/whisky-line-bot-multi-agent:v1.0'
-options:
-  logging: CLOUD_LOGGING_ONLY # ここを追加
