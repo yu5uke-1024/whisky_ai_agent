@@ -1,60 +1,9 @@
-# cloudbuild.yaml
-
 steps:
-  # ステップ1: Dockerイメージをビルドし、Artifact Registryにプッシュする
   - name: 'gcr.io/cloud-builders/docker'
-    id: 'Build and Push'
-    args:
-      - 'build'
-      # ▼▼▼ 正しいイメージパスに修正 ▼▼▼
-      - '--tag'
-      - '${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPOSITORY}/${_IMAGE_SUBPATH}/${_SERVICE_NAME}:${COMMIT_SHA}'
-      - '--tag'
-      - '${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPOSITORY}/${_IMAGE_SUBPATH}/${_SERVICE_NAME}:latest'
-      - '--cache-from'
-      - '${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPOSITORY}/${_IMAGE_SUBPATH}/${_SERVICE_NAME}:latest'
-      # ▲▲▲ ここまでを修正 ▲▲▲
-      - '.'
-      - '--file'
-      - 'Dockerfile'
-
-  # ステップ2: ビルドしたイメージをCloud Runにデプロイする
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    id: 'Deploy to Cloud Run'
-    entrypoint: 'gcloud'
-    args:
-      - 'run'
-      - 'deploy'
-      - '${_SERVICE_NAME}'
-      # ▼▼▼ 正しいイメージパスに修正 ▼▼▼
-      - '--image=${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPOSITORY}/${_IMAGE_SUBPATH}/${_SERVICE_NAME}:${COMMIT_SHA}'
-      # ▲▲▲ ここを修正 ▲▲▲
-      - '--region=${_DEPLOY_REGION}'
-      - '--platform=managed'
-      - '--quiet'
-      - '--allow-unauthenticated'
-      - '--memory=1Gi'
-      - '--cpu=1'
-      - '--timeout=300s'
-      - '--max-instances=10'
-
-# ビルドしたイメージを明示的に指定
+    args: ['build', '-t', 'asia-northeast1-docker.pkg.dev/whisky-ai-project/whisky-ai-repo/whisky-line-bot-multi-agent:v1.0', '.']
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'asia-northeast1-docker.pkg.dev/whisky-ai-project/whisky-ai-repo/whisky-line-bot-multi-agent:v1.0']
 images:
-  # ▼▼▼ 正しいイメージパスに修正 ▼▼▼
-  - '${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPOSITORY}/${_IMAGE_SUBPATH}/${_SERVICE_NAME}:${COMMIT_SHA}'
-  - '${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPOSITORY}/${_IMAGE_SUBPATH}/${_SERVICE_NAME}:latest'
-  # ▲▲▲ ここまでを修正 ▲▲▲
-
-# Cloud Buildのオプション
+  - 'asia-northeast1-docker.pkg.dev/whisky-ai-project/whisky-ai-repo/whisky-line-bot-multi-agent:v1.0'
 options:
-  logging: CLOUD_LOGGING_ONLY
-
-# 置換される変数
-substitutions:
-  _SERVICE_NAME: 'whisky-line-bot'
-  _DEPLOY_REGION: 'asia-northeast1'
-  _AR_HOSTNAME: 'asia-northeast1-docker.pkg.dev'
-  _AR_REPOSITORY: 'cloud-run-source-deploy'
-  # ▼▼▼ この行を追加 ▼▼▼
-  _IMAGE_SUBPATH: 'whisky_ai_agent'
-  # ▲▲▲ ここまでを追加 ▲▲▲
+  logging: CLOUD_LOGGING_ONLY # ここを追加
