@@ -1,0 +1,68 @@
+# ステージング環境用のビルド、プッシュ、デプロイのステップを定義
+steps:
+  # Step 1: Dockerイメージをビルド（ステージング用タグ）
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'Build Docker Image for Staging'
+    args:
+      - 'build'
+      - '-t'
+      - 'asia-northeast1-docker.pkg.dev/whisky-ai-project/whisky-ai-repo/whisky-line-bot-multi-agent:staging-${SHORT_SHA}'
+      - '-t'
+      - 'asia-northeast1-docker.pkg.dev/whisky-ai-project/whisky-ai-repo/whisky-line-bot-multi-agent:staging-latest'
+      - '.'
+
+  # Step 2: DockerイメージをArtifact Registryにプッシュ（両方のタグ）
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'Push Docker Image to Registry'
+    args:
+      - 'push'
+      - '--all-tags'
+      - 'asia-northeast1-docker.pkg.dev/whisky-ai-project/whisky-ai-repo/whisky-line-bot-multi-agent'
+
+  # Step 3: Cloud Runステージングサービスにデプロイ
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'Deploy to Cloud Run Staging'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'whisky-line-bot-staging' # ステージング用サービス名
+      - '--image'
+      - 'asia-northeast1-docker.pkg.dev/whisky-ai-project/whisky-ai-repo/whisky-line-bot-multi-agent:staging-${SHORT_SHA}'
+      - '--region'
+      - 'asia-northeast1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--memory'
+      - '1Gi'
+      - '--cpu'
+      - '1'
+      - '--timeout'
+      - '300s'
+      - '--max-instances'
+      - '5' # ステージングは少なめに設定
+      - '--min-instances'
+      - '0'
+      - '--port'
+      - '8080'
+      - '--set-env-vars'
+      - 'ENVIRONMENT=staging'
+      - '--tag'
+      - 'staging' # トラフィック管理用のタグ
+
+# ビルドとデプロイに使用するイメージを明記
+images:
+  - 'asia-northeast1-docker.pkg.dev/whisky-ai-project/whisky-ai-repo/whisky-line-bot-multi-agent:staging-${SHORT_SHA}'
+  - 'asia-northeast1-docker.pkg.dev/whisky-ai-project/whisky-ai-repo/whisky-line-bot-multi-agent:staging-latest'
+
+# タイムアウト設定
+timeout: '1200s'
+options:
+  logging: CLOUD_LOGGING_ONLY
+  substitution_option: 'ALLOW_LOOSE'
+
+# 置換変数の定義
+substitutions:
+  _SERVICE_NAME: 'whisky-line-bot-staging'
+  _REGION: 'asia-northeast1'
