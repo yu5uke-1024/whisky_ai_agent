@@ -19,7 +19,7 @@ async def main_async():
     print("=== Whisky Assistant ===\n")
     user_id = input("ユーザーIDを入力してください: ").strip()
     if not user_id:
-        user_id = "default_user"
+        user_id = "default_user_id"
 
     # 初期状態の設定
     initial_state = {
