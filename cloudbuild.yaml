@@ -6,16 +6,15 @@ steps:
     id: 'Build and Push'
     args:
       - 'build'
-      # $COMMIT_SHAを使って、Gitのコミットごとに一意のタグを付ける
+      # ▼▼▼ 正しいイメージパスに修正 ▼▼▼
       - '--tag'
-      - '${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:${COMMIT_SHA}'
-      # latestタグも付けておくと、キャッシュや最新版の識別に便利
+      - '${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPOSITORY}/${_IMAGE_SUBPATH}/${_SERVICE_NAME}:${COMMIT_SHA}'
       - '--tag'
-      - '${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:latest'
-      # ビルドキャッシュを有効にして、2回目以降のビルドを高速化
+      - '${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPOSITORY}/${_IMAGE_SUBPATH}/${_SERVICE_NAME}:latest'
       - '--cache-from'
-      - '${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:latest'
-      - '.' # カレントディレクトリをビルドコンテキストにする
+      - '${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPOSITORY}/${_IMAGE_SUBPATH}/${_SERVICE_NAME}:latest'
+      # ▲▲▲ ここまでを修正 ▲▲▲
+      - '.'
       - '--file'
       - 'Dockerfile'
 
@@ -27,27 +26,27 @@ steps:
       - 'run'
       - 'deploy'
       - '${_SERVICE_NAME}'
-      # ステップ1でビルドした、コミットIDでタグ付けされたイメージを指定
-      - '--image=${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:${COMMIT_SHA}'
+      # ▼▼▼ 正しいイメージパスに修正 ▼▼▼
+      - '--image=${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPOSITORY}/${_IMAGE_SUBPATH}/${_SERVICE_NAME}:${COMMIT_SHA}'
+      # ▲▲▲ ここを修正 ▲▲▲
       - '--region=${_DEPLOY_REGION}'
       - '--platform=managed'
       - '--quiet'
-      # --- deploy.shにあったデプロイ設定をここに集約 ---
       - '--allow-unauthenticated'
       - '--memory=1Gi'
       - '--cpu=1'
-      - '--timeout=300s' # 単位(s)を付けるのが推奨
+      - '--timeout=300s'
       - '--max-instances=10'
 
-# ビルドしたイメージを明示的に指定（Cloud Buildが自動的にプッシュしてくれる）
+# ビルドしたイメージを明示的に指定
 images:
-  - '${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:${COMMIT_SHA}'
-  - '${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:latest'
+  # ▼▼▼ 正しいイメージパスに修正 ▼▼▼
+  - '${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPOSITORY}/${_IMAGE_SUBPATH}/${_SERVICE_NAME}:${COMMIT_SHA}'
+  - '${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPOSITORY}/${_IMAGE_SUBPATH}/${_SERVICE_NAME}:latest'
+  # ▲▲▲ ここまでを修正 ▲▲▲
 
 # Cloud Buildのオプション
 options:
-  # デフォルトのログバケットを利用する設定（権限問題の回避）
-  # これでもエラーが出る場合は、前回の提案通り専用バケットを指定します
   logging: CLOUD_LOGGING_ONLY
 
 # 置換される変数
@@ -56,3 +55,6 @@ substitutions:
   _DEPLOY_REGION: 'asia-northeast1'
   _AR_HOSTNAME: 'asia-northeast1-docker.pkg.dev'
   _AR_REPOSITORY: 'cloud-run-source-deploy'
+  # ▼▼▼ この行を追加 ▼▼▼
+  _IMAGE_SUBPATH: 'whisky_ai_agent'
+  # ▲▲▲ ここまでを追加 ▲▲▲
