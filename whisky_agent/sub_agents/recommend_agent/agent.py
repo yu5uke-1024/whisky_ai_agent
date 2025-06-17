@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field, ValidationError
 from ...storage.firestore import FirestoreClient # FirestoreClientをインポート
 from .prompts import RECOMMEND_AGENT_INSTRUCTION
 
-async def get_tasting_note_from_firestore(tool_context: ToolContext) -> dict:
+async def get_user_whisky_history_from_firestore(tool_context: ToolContext) -> dict:
     """テイスティングノートをFirestoreに保存する
 
     Args:
@@ -21,12 +21,12 @@ async def get_tasting_note_from_firestore(tool_context: ToolContext) -> dict:
     history = await firestore_client.get_whisky_history(user_id)
 
     return history
-    
+
 
 recommend_agent = Agent(
     name="recommend_agent",
     model="gemini-2.5-flash-preview-05-20",
     description="ウイスキーのおすすめを提案するエージェント",
     instruction=RECOMMEND_AGENT_INSTRUCTION,
-    tools=[get_tasting_note_from_firestore]
+    tools=[get_user_whisky_history_from_firestore]
     )
