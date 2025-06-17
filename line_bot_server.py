@@ -242,7 +242,7 @@ async def handle_image_message_async(event):
         # ADKマルチエージェントシステムで画像分析
         response = await process_with_multi_agent(
             user_id, 
-            "ウイスキーの画像を分析してください", 
+            "ウイスキーの画像の分析、もしくはメニューの画像からおすすめウイスキーを教えて", 
             image_data
         )
 
