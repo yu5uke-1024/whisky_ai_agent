@@ -13,7 +13,7 @@ IMAGE_EXTRACTER_INSTRUCTION = """
     - country: 生産国（例: "スコットランド"）
     - region: 生産地域（例: "アイラ島"）
     - whisky_type: ウイスキーの種類（例: "シングルモルトウイスキー"）
-    - other: 特徴的な情報（例: "非常にスモーキー"）
+
 
     # 必須ルール
     1. 年数は「年」の単位付きで返す（NASの場合は「NAS」）
@@ -38,7 +38,6 @@ IMAGE_EXTRACTER_INSTRUCTION = """
         "country": "スコットランド",
         "region": "アイラ島",
         "whisky_type": "シングルモルトウイスキー",
-        "other": "非常にスモーキー"
     }
 
     # 重要な注意点

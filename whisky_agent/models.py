@@ -51,10 +51,6 @@ class WhiskyInfo(BaseModel):
         description="ウイスキーの種類",
         default=""
     )
-    other: str = Field(
-        description="その他の特徴的な情報",
-        default=""
-    )
 
 
 def create_whisky_id(callback_context: CallbackContext) -> Optional[types.Content]:
