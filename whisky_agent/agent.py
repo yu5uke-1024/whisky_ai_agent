@@ -25,7 +25,7 @@ def check_if_agent_should_run(callback_context: CallbackContext) -> Optional[typ
 # ルートエージェントの定義
 root_agent = Agent(
     name="whisky_agent",
-    model="gemini-2.5-flash-preview-04-17",
+    model="gemini-2.5-flash",#gemini-2.5-flash-lite-preview-06-17
     description="ウイスキー情報の統括コーディネーター。明確なエージェント委譲ルールに基づきタスクを調整します。",
     instruction=INSTRUCTION, # エージェントの指示プロンプト
     sub_agents=[

@@ -8,7 +8,7 @@ from .....models import TastingAnalysis
 # テイスティングノート作成エージェントの定義
 tasting_note_creator = Agent(
     name="tasting_note_creator",
-    model="gemini-2.0-flash-lite",
+    model="gemini-2.5-flash",
     description="ウイスキーのテイスティングノート作成の専門家。提供されたウイスキー情報に基づいてノートを生成します。",
     instruction=TASTING_NOTE_CREATION_INSTRUCTION,
     output_schema=TastingAnalysis,

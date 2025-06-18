@@ -81,7 +81,7 @@ def modify_field(field: FieldType, value: str, tool_context: ToolContext) -> dic
 
 image_modifier = Agent(
     name="image_modifier",
-    model="gemini-2.0-flash",
+    model="gemini-2.5-flash",
     description="ウイスキーのラベル画像から抽出した情報を修正する専門家",
     instruction=IMAGE_MODIFICATION_INSTRUCTION,
     tools=[

@@ -227,7 +227,7 @@ def update_note_characteristic(
 
 tasting_note_modifier = Agent(
     name="tasting_note_modifier",
-    model="gemini-2.0-flash-lite",
+    model="gemini-2.5-flash",
     description="ウイスキーのテイスティングノート修正の専門家",
     instruction="""
     あなたはウイスキーのテイスティングノートを修正する専門家です。
