@@ -41,7 +41,7 @@ def save_tasting_note_to_firestore(tool_context: ToolContext) -> dict:
 
 whisky_info_creator = Agent(
     name="whisky_info_creator",
-    model="gemini-2.5-flash-preview-05-20",
+    model="gemini-2.5-flash",
     description="ウイスキーの情報を作成するエージェント",
     instruction="output_schemaに従ってウイスキーの情報を作成してください。",
     output_schema=WhiskyInfo,
@@ -54,7 +54,7 @@ whisky_info_creator = Agent(
 
 tasting_note_analyst = Agent(
     name="tasting_note_analyst",
-    model="gemini-2.5-flash-preview-05-20",
+    model="gemini-2.5-flash",
     description="ウイスキーのテイスティングノートを管理・分析するエージェント",
     instruction=TASTING_NOTE_ANALYST_INSTRUCTION,
     tools=[
