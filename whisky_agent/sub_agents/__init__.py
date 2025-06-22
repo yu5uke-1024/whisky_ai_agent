@@ -1,7 +1,7 @@
-from .image_analyst.agent import image_analyst
-from .tasting_note_analyst.agent import tasting_note_analyst
+from .image_agent.agent import image_agent
+from .tasting_note_agent.agent import tasting_note_agent
 
 __all__ = [
-    'image_analyst',
-    'tasting_note_analyst'
+    'image_agent',
+    'tasting_note_agent'
 ]

@@ -1,49 +1,95 @@
 # Whisky Multi-Agent System
 
-ウイスキーの画像解析とテイスティングノート管理のためのマルチエージェントシステム。Google ADKを活用し、複数のAIエージェントが協調して動作します。test
+---
 
-## 機能
+## 概要
 
-- 🔍 **画像解析**: ウイスキーボトルの画像から情報を自動抽出
-  - ブランド名
-  - 蒸溜所
-  - 熟成年数
-  - アルコール度数
-  - その他の特徴
+Whisky Multi-Agent Systemは、ウイスキーの画像解析・テイスティングノート管理・レコメンド・履歴管理を行うマルチエージェントAIシステムです。Google ADKを活用し、複数のAIエージェントが協調して動作します。CLI・LINE Bot両対応。
 
-- 📝 **テイスティングノート**: ウイスキーの味わいを詳細に分析
-  - 香り (Nose)
-  - 味わい (Palate)
-  - 余韻 (Finish)
-  - 総合評価
+---
 
-- 💾 **データ管理**
-  - ウイスキー情報の保存
-  - テイスティングノートの記録
-  - 履歴の閲覧
+## 主な機能
 
-- ❓ **一般的な質問対応**
-  - ウイスキーの基礎知識
-  - 製法や特徴の説明
-  - 用語解説
+- **画像解析**  
+  ウイスキーボトルのラベル画像からブランド名・蒸溜所・熟成年数などを自動抽出
+
+- **テイスティングノート管理**  
+  香り・味わい・余韻・評価などのテイスティングノートを記録・分析
+
+- **ウイスキー情報・履歴管理**  
+  Firestoreを用いたウイスキー情報・テイスティングノート・ユーザー履歴の保存・取得
+
+- **レコメンド・一般質問対応**  
+  ユーザー履歴に基づくウイスキーのおすすめや、ウイスキーに関する一般的な質問への回答
+
+- **LINE Bot連携**  
+  LINE上で画像送信・テキスト対話が可能
+
+---
 
 ## システム構成
 
-### メインエージェント
-- `root_agent`: 全体のコーディネーターとして機能
+```
+.
+├── main.py                # CLIエントリーポイント
+├── line_bot_server.py     # LINE Botサーバー (FastAPI)
+├── whisky_agent/
+│   ├── agent.py           # ルートエージェント定義
+│   ├── models.py          # WhiskyInfo, TastingNote等データモデル
+│   ├── storage/
+│   │   └── firestore.py   # Firestore連携
+│   └── sub_agents/
+│       ├── image_agent/   # 画像解析サブエージェント
+│       ├── tasting_note_agent/ # テイスティングノートサブエージェント
+│       └── recommend_agent/    # レコメンド・一般質問サブエージェント
+├── utils.py               # セッション管理・共通関数
+├── requirements.txt
+└── Dockerfile
+```
 
-### サブエージェント
-1. `image_analyst`: 画像解析専門
-2. `tasting_note_analyst`: テイスティング分析専門
+### エージェント構成
 
-### データモデル
-- `WhiskyInfo`: ウイスキー情報の管理
-- `TastingNote`: テイスティングノートの管理
+- **root_agent**  
+  タスクを自動で振り分けるコーディネーター。  
+  サブエージェント：  
+  - `image_agent`（画像解析）
+  - `tasting_note_agent`（テイスティングノート管理）
+  - `recommend_agent`（レコメンド・一般質問）
+
+- **image_agent**  
+  画像からウイスキー情報を抽出し、Firestoreに保存
+
+- **tasting_note_agent**  
+  テイスティングノートの作成・編集・保存
+
+- **recommend_agent**  
+  履歴に基づくおすすめや一般的な質問対応
+
+---
+
+## データモデル
+
+- **WhiskyInfo**  
+  ブランド名、熟成年数、蒸溜所、生産国、地域、種類など
+
+- **TastingNote**  
+  香り（nose）、味わい（palate）、余韻（finish）、評価（rating）
+
+Firestoreにより、ユーザーごと・ウイスキーごとに情報を永続化。
+
+---
 
 ## 必要要件
 
-```bash
-# 必要なPythonパッケージ
+- Python 3.8+
+- Google Cloud Firestore（認証情報が必要）
+- LINE Bot利用時はLINE Developersのチャネル設定
+
+### Pythonパッケージ
+
+`requirements.txt` より自動インストール推奨
+
+```
 python-dotenv
 flask
 line-bot-sdk
@@ -52,51 +98,72 @@ gunicorn
 google-generativeai
 google-cloud-firestore
 urllib3<2
-google-adk
+google-adk==1.3.0
+fastapi
+uvicorn[standard]
+python-multipart
 ```
+
+---
 
 ## セットアップ
 
-1. 環境のセットアップ
-```bash
-# 仮想環境の作成と有効化
-python -m venv venv
-source venv/bin/activate  # Unix系
-venv\Scripts\activate     # Windows
+1. 仮想環境の作成・有効化
+    ```bash
+    python -m venv venv
+    source venv/bin/activate  # Unix系
+    venv\Scripts\activate     # Windows
+    ```
 
-# 依存パッケージのインストール
-pip install -r requirements.txt
-```
+2. 依存パッケージのインストール
+    ```bash
+    pip install -r requirements.txt
+    ```
 
-2. 環境変数の設定
-```bash
-# .envファイルを作成し、必要な環境変数を設定
-touch .env
-```
+3. 環境変数の設定
+    - `.env` ファイルを作成し、以下を記載
+        ```
+        GOOGLE_API_KEY=xxx
+        FIREBASE_CREDENTIALS=xxx.json
+        LINE_CHANNEL_ACCESS_TOKEN=xxx
+        LINE_CHANNEL_SECRET=xxx
+        ```
 
-必要な環境変数:
-- `GOOGLE_API_KEY`: Google APIキー（Gemini APIアクセス用）
-- `FIREBASE_CREDENTIALS`: Firestore認証情報（オプション）
+---
 
-## 使用方法
+## 使い方
 
-1. アプリケーションの起動
+### CLI版
+
 ```bash
 python main.py
 ```
+- ユーザーID入力後、プロンプトに従いテキスト・画像パスを入力
+- `exit` または `quit` で終了
 
-2. 対話の開始
-- プロンプトが表示されたら、以下のような操作が可能：
-  - 画像の解析
-  - テイスティングノートの作成
-  - 一般的な質問
-  - 履歴の確認
+### LINE Bot版
 
-3. 終了
 ```bash
-exit
+uvicorn line_bot_server:app --host 0.0.0.0 --port 8000
 ```
-または
-```bash
-quit
-```
+- LINE DevelopersでWebhook URLを設定
+- 画像・テキストをLINEで送信して利用
+
+---
+
+## Firestore構成
+
+- `users/{user_id}/whisky_collection/{whisky_id}`  
+  → ウイスキー情報・テイスティングノート
+- `user_sessions/{user_id}`  
+  → セッション・会話履歴
+
+---
+
+## 開発・テスト
+
+- 主要ロジックは `whisky_agent/` 配下
+- テスト画像は `test_images/` に配置
+- Dockerfile/Cloud Build対応
+
+---

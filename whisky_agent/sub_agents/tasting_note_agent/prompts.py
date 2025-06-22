@@ -1,4 +1,4 @@
-TASTING_NOTE_ANALYST_INSTRUCTION = """
+tasting_note_agent_INSTRUCTION = """
   あなたはウイスキーのテイスティングノートの専門家です。
     以下の手順に従って、ユーザーのテイスティングノート作成・管理をサポートします。
 
