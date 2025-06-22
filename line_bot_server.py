@@ -38,6 +38,16 @@ APP_NAME = "Whisky Assistant"
 active_sessions = {}
 session_cache = {}  # Firestoreデータのキャッシュ
 
+
+def format_line_response(text: str) -> str:
+    """
+    LINE返信用にテキストを整形する（例: * を除去）
+    """
+    if not text:
+        return ""
+    # '*' を除去し、前後の空白も整える
+    return text.replace('*', '').strip()
+
 async def get_or_create_session_for_user(user_id: str):
     """ユーザーごとのADKセッションを取得または作成（最適化版）"""
     global runner
@@ -52,7 +62,7 @@ async def get_or_create_session_for_user(user_id: str):
 
     # 新規セッション作成（シンプル化）
     session_id = f"session_{user_id}"
-    
+
     try:
         # Firestoreから復元を試行（非同期で並行実行しない）
         existing_state = None
@@ -61,7 +71,7 @@ async def get_or_create_session_for_user(user_id: str):
         else:
             # バックグラウンドでFirestoreから取得（ブロックしない）
             asyncio.create_task(load_session_from_firestore(user_id))
-        
+
         # 初期状態でセッション作成
         initial_state = existing_state or {
             "user_id": user_id,
@@ -74,16 +84,16 @@ async def get_or_create_session_for_user(user_id: str):
             session_id=session_id,
             state=initial_state,
         )
-        
+
         active_sessions[user_id] = new_session.id
         session_cache[user_id] = initial_state
-        
+
         # バックグラウンドでFirestoreに保存（ブロックしない）
         asyncio.create_task(save_session_to_firestore(user_id, new_session.id, initial_state))
-        
+
         print(f"Session created for user {user_id}: {new_session.id}")
         return new_session.id
-        
+
     except Exception as e:
         print(f"Error creating session for user {user_id}: {e}")
         # フォールバック：最小限のセッション作成
@@ -190,7 +200,7 @@ async def handle_webhook(request: Request):
                 tasks.append(handle_text_message_async(event))
             elif isinstance(event.message, ImageMessage):
                 tasks.append(handle_image_message_async(event))
-    
+
     # 全てのタスクを並行実行
     if tasks:
         await asyncio.gather(*tasks, return_exceptions=True)
@@ -208,10 +218,11 @@ async def handle_text_message_async(event):
         # ADKマルチエージェントシステムで処理
         response = await process_with_multi_agent(user_id, user_query)
 
-        # 非同期でLINE Botに返信
+        # --- 整形して返信 ---
+        formatted_response = format_line_response(response)
         await line_bot_api.reply_message(
             event.reply_token,
-            TextSendMessage(text=response)
+            TextSendMessage(text=formatted_response)
         )
         print(f"Text response sent successfully for user {user_id}")
 
@@ -241,15 +252,16 @@ async def handle_image_message_async(event):
 
         # ADKマルチエージェントシステムで画像分析
         response = await process_with_multi_agent(
-            user_id, 
-            "ウイスキーの画像の分析、もしくはメニューの画像からおすすめウイスキーを教えて", 
+            user_id,
+            "ウイスキーの画像の分析、もしくはメニューの画像からおすすめウイスキーを教えて",
             image_data
         )
 
-        # 非同期でLINE Botに返信
+        # --- 整形して返信 ---
+        formatted_response = format_line_response(response)
         await line_bot_api.reply_message(
             event.reply_token,
-            TextSendMessage(text=response)
+            TextSendMessage(text=formatted_response)
         )
         print(f"Image analysis response sent successfully for user {user_id}")
 
