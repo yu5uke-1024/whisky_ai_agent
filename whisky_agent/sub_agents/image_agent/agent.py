@@ -37,7 +37,7 @@ def save_whisky_info_to_firestore(tool_context: ToolContext) -> dict:
 image_agent = Agent(
     name="image_agent",
     model="gemini-2.5-flash",
-    description="ウイスキーのラベル画像から情報を抽出する専門家",
+    description="ウイスキーのラベル画像を解析・管理・分析するエージェント。",
     instruction=image_agent_INSTRUCTION,
     sub_agents=[whisky_label_processor],
     tools=[
