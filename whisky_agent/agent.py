@@ -7,7 +7,6 @@ from .prompts import INSTRUCTION
 from google.adk.agents.callback_context import CallbackContext
 from google.genai import types # For types.Content
 
-
 def check_if_agent_should_run(callback_context: CallbackContext) -> Optional[types.Content]:
     """
     Logs entry and checks 'skip_llm_agent' in session state.
