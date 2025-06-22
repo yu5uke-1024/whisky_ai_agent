@@ -26,7 +26,7 @@ async def get_user_whisky_history_from_firestore(tool_context: ToolContext) -> d
 recommend_agent = Agent(
     name="recommend_agent",
     model="gemini-2.5-flash",
-    description="ウイスキーのおすすめを提案するエージェント",
+    description="ウイスキーのおすすめを提案したり、一般的な会話をするエージェント",
     instruction=RECOMMEND_AGENT_INSTRUCTION,
     tools=[get_user_whisky_history_from_firestore]
     )
