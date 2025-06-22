@@ -1,7 +1,7 @@
 from typing import Optional
 from google.adk.agents import Agent
-from .sub_agents.image_analyst import image_analyst
-from .sub_agents.tasting_note_analyst import tasting_note_analyst
+from .sub_agents.image_agent import image_agent
+from .sub_agents.tasting_note_agent import tasting_note_agent
 from .sub_agents.recommend_agent import recommend_agent
 from .prompts import INSTRUCTION
 from google.adk.agents.callback_context import CallbackContext
@@ -23,13 +23,13 @@ def check_if_agent_should_run(callback_context: CallbackContext) -> Optional[typ
 
 # ルートエージェントの定義
 root_agent = Agent(
-    name="whisky_agent",
+    name="whisky_master_agent",
     model="gemini-2.5-flash-lite-preview-06-17",
     description="ウイスキー関連タスクの振り分け専門エージェント。自らは回答せず、対話履歴を確認して適切なサブエージェントにタスクを委譲します。",
     instruction=INSTRUCTION, # エージェントの指示プロンプト
     sub_agents=[
-        image_analyst, # 画像解析サブエージェント
-        tasting_note_analyst, # テイスティングノート分析サブエージェント
+        image_agent, # 画像解析サブエージェント
+        tasting_note_agent, # テイスティングノート分析サブエージェント
         recommend_agent, # おすすめエージェント
     ],
     before_agent_callback=check_if_agent_should_run # Assign the callback

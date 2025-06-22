@@ -6,8 +6,8 @@ from .....models import WhiskyInfo
 from .....models import create_whisky_id
 
 
-image_extracter_to_user = Agent(
-    name="image_extracter_to_user",
+revise_output_for_user = Agent(
+    name="revise_output_for_user",
     model="gemini-2.5-flash",
     description="文章整形エージェント",
     instruction="""ImageAnalysisをユーザーにわかりやすく文章にして回答してください。
@@ -38,8 +38,8 @@ image_extracter = Agent(
 
 
 
-image_extracter_manager = SequentialAgent(
-    name="image_extracter_manager",
+whisky_label_processor = SequentialAgent(
+    name="whisky_label_processor",
     description="ウイスキーのラベル画像から情報を抽出し、ユーザーに文章にして回答する",
-    sub_agents=[image_extracter, image_extracter_to_user],
+    sub_agents=[image_extracter, revise_output_for_user],
 )

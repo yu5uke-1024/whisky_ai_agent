@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field, ValidationError
 from ...storage.firestore import FirestoreClient # FirestoreClientをインポート
 from .sub_agents.tasting_note_creator import tasting_note_creator
 from .sub_agents.tasting_note_modifier import tasting_note_modifier
-from .prompts import TASTING_NOTE_ANALYST_INSTRUCTION
+from .prompts import tasting_note_agent_INSTRUCTION
 from ...models import WhiskyInfo
 from ...models import create_whisky_id
 
@@ -52,11 +52,11 @@ whisky_info_creator = Agent(
 )
 
 
-tasting_note_analyst = Agent(
-    name="tasting_note_analyst",
+tasting_note_agent = Agent(
+    name="tasting_note_agent",
     model="gemini-2.5-flash",
     description="ウイスキーのテイスティングノートを管理・分析するエージェント",
-    instruction=TASTING_NOTE_ANALYST_INSTRUCTION,
+    instruction=tasting_note_agent_INSTRUCTION,
     tools=[
         AgentTool(tasting_note_creator),
         AgentTool(tasting_note_modifier),
