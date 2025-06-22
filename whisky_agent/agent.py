@@ -25,7 +25,7 @@ def check_if_agent_should_run(callback_context: CallbackContext) -> Optional[typ
 root_agent = Agent(
     name="whisky_agent",
     model="gemini-2.5-flash-lite-preview-06-17",
-    description="ウイスキー情報の統括コーディネーター。明確なエージェント委譲ルールに基づきタスクを調整します。",
+    description="ウイスキー関連タスクの振り分け専門エージェント。自らは回答せず、対話履歴を確認して適切なサブエージェントにタスクを委譲します。",
     instruction=INSTRUCTION, # エージェントの指示プロンプト
     sub_agents=[
         image_analyst, # 画像解析サブエージェント
