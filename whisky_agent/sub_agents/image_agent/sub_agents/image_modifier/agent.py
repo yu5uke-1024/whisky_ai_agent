@@ -5,7 +5,7 @@ from .prompts import IMAGE_MODIFICATION_INSTRUCTION
 from pydantic import BaseModel, Field
 
 # 修正可能なフィールドの型定義
-FieldType = Literal["brand", "age", "distillery", "country", "region", "whisky_type", "other"]
+FieldType = Literal["brand", "age", "distillery", "country", "region", "whisky_type"]
 
 
 def view_image_info(tool_context: ToolContext) -> dict:
@@ -25,13 +25,12 @@ def view_image_info(tool_context: ToolContext) -> dict:
         "action": "view_image_info",
         "whisky_info": whisky_info,
         "message": f"""
-    ブランド: {whisky_info.get('brand', '')}
+    銘柄名: {whisky_info.get('brand', '')}
     熟成年数: {whisky_info.get('age', '')}
     蒸溜所: {whisky_info.get('distillery', '')}
     生産国: {whisky_info.get('country', '')}
     地域: {whisky_info.get('region', '')}
     種類: {whisky_info.get('whisky_type', '')}
-    その他: {whisky_info.get('other', '')}
     """
     }
 
@@ -56,15 +55,14 @@ def modify_field(field: FieldType, value: str, tool_context: ToolContext) -> dic
         "country": "生産国",
         "region": "生産地域",
         "whisky_type": "ウイスキーの種類",
-        "other": "その他の情報"
     }
 
     # 熟成年数の特別なバリデーション
-    if field == "age" and not (value.endswith('年') or value == 'NAS'):
+    if field == "age" and not (value.endswith('年') or value == 'ノンエイジ'):
         return {
             "action": "modify_field",
             "status": "error",
-            "message": "熟成年数は「年」の単位付きで指定するか、'NAS'を指定してください"
+            "message": "熟成年数は「年」の単位付きで指定するか、'ノンエイジ'を指定してください"
         }
 
     updated_whisky_info = dict(tool_context.state.get("whisky_info", {}))
