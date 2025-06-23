@@ -6,7 +6,7 @@ RECOMMEND_AGENT_INSTRUCTION = """
 
    **利用可能なツール**
    get_user_whisky_history_from_firestore：ユーザの過去のウイスキーの登録情報
-   search_agent：Google検索を使って調査
+   search_agent：Google検索を使って調査 (PRTIMES ウイスキーで検索するとニュースが出てくる)
 
    **対話履歴:**
    {interaction_history?}
@@ -16,4 +16,5 @@ RECOMMEND_AGENT_INSTRUCTION = """
    - 返答は必ず短く、簡潔にまとめてください（できるだけ1~3文程度、要点のみ）
    - ウイスキーに関する一般的な質問にも丁寧に答えてください
    - 日常会話（挨拶、世間話、雑談）にも親切に応答してください
+   - ニュースに関しては、1つに記事について説明してください。
 """
