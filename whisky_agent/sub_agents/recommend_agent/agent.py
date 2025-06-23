@@ -7,6 +7,8 @@ from ...storage.firestore import FirestoreClient # FirestoreClientをインポ�
 from .prompts import RECOMMEND_AGENT_INSTRUCTION
 from google.adk.tools import google_search
 from google.adk.tools import agent_tool
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 async def get_user_whisky_history_from_firestore(tool_context: ToolContext) -> dict:
     """テイスティングノートをFirestoreに保存する
@@ -24,11 +26,14 @@ async def get_user_whisky_history_from_firestore(tool_context: ToolContext) -> d
 
     return history
 
+
 search_agent = Agent(
     model='gemini-2.5-flash',
     name='SearchAgent',
-    instruction="google検索に特化したエージェント",
-    tools=[google_search],
+    description="google検索に特化したエージェント",
+    instruction="""google_searchツールでgoogle検索を実施""",
+    tools=[google_search,
+           ],
 )
 
 recommend_agent = Agent(
@@ -37,6 +42,6 @@ recommend_agent = Agent(
     description="ウイスキーのおすすめを提案したり、一般的な会話をするエージェント",
     instruction=RECOMMEND_AGENT_INSTRUCTION,
     tools=[get_user_whisky_history_from_firestore,
-           agent_tool.AgentTool(search_agent)
+           agent_tool.AgentTool(search_agent),
            ]
     )
