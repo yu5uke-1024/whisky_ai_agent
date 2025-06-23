@@ -5,6 +5,8 @@ from typing import Dict, Any, List, Optional, Literal
 from pydantic import BaseModel, Field, ValidationError
 from ...storage.firestore import FirestoreClient # FirestoreClientをインポート
 from .prompts import RECOMMEND_AGENT_INSTRUCTION
+from google.adk.tools import google_search
+from google.adk.tools import agent_tool
 
 async def get_user_whisky_history_from_firestore(tool_context: ToolContext) -> dict:
     """テイスティングノートをFirestoreに保存する
@@ -22,11 +24,19 @@ async def get_user_whisky_history_from_firestore(tool_context: ToolContext) -> d
 
     return history
 
+search_agent = Agent(
+    model='gemini-2.5-flash',
+    name='SearchAgent',
+    instruction="google検索に特化したエージェント",
+    tools=[google_search],
+)
 
 recommend_agent = Agent(
     name="recommend_agent",
     model="gemini-2.5-flash",
     description="ウイスキーのおすすめを提案したり、一般的な会話をするエージェント",
     instruction=RECOMMEND_AGENT_INSTRUCTION,
-    tools=[get_user_whisky_history_from_firestore]
+    tools=[get_user_whisky_history_from_firestore,
+           agent_tool.AgentTool(search_agent)
+           ]
     )

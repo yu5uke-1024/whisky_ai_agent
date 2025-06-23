@@ -32,7 +32,7 @@ class WhiskyInfo(BaseModel):
         default=""
     )
     age: str = Field(
-        description="熟成年数（年の単位付き、NASの場合は「NAS」）",
+        description="熟成年数（年の単位付き、ノンエイジの場合は「ノンエイジ」）",
         default=""
     )
     distillery: str = Field(
