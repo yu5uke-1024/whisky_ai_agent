@@ -13,7 +13,7 @@ from ..search_agent import search_agent
 from google.adk.tools import agent_tool
 
 
-def save_tasting_note_to_firestore(tool_context: ToolContext) -> dict:
+def save_tasting_note(tool_context: ToolContext) -> dict:
     """テイスティングノートをFirestoreに保存する
 
     Args:
@@ -25,7 +25,7 @@ def save_tasting_note_to_firestore(tool_context: ToolContext) -> dict:
     user_id = tool_context.state.get("user_id", 'default_user_id')
     whisky_id = tool_context.state.get("whisky_id", 'default_whisky_id')
 
-    print(f"--- Tool: save_tasting_note_to_firestore called for user {user_id} ---")
+    print(f"--- Tool: save_tasting_note called for user {user_id} ---")
 
     tasting_note = tool_context.state.get("tasting_note", {})
     whisky_info = tool_context.state.get("whisky_info", {})
@@ -63,7 +63,7 @@ tasting_note_agent = Agent(
     tools=[
         AgentTool(tasting_note_creator),
         AgentTool(tasting_note_modifier),
-        save_tasting_note_to_firestore,
+        save_tasting_note,
         AgentTool(whisky_info_creator),
         agent_tool.AgentTool(search_agent)
     ])
