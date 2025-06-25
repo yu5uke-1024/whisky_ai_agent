@@ -10,7 +10,7 @@ from google.adk.tools.tool_context import ToolContext
 from ..search_agent import search_agent
 from google.adk.tools import agent_tool
 
-def save_whisky_info_to_firestore(tool_context: ToolContext) -> dict:
+def save_whisky_info(tool_context: ToolContext) -> dict:
     """ウイスキー情報をFirestoreに保存する
 
     Args:
@@ -44,7 +44,7 @@ image_agent = Agent(
     sub_agents=[whisky_label_processor],
     tools=[
         AgentTool(image_modifier),
-        save_whisky_info_to_firestore,
+        save_whisky_info,
         AgentTool(search_agent),
         ]
 )
