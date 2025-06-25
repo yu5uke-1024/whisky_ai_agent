@@ -6,6 +6,7 @@ from .....models import WhiskyInfo
 from .....models import create_whisky_id
 
 
+
 revise_output_for_user = Agent(
     name="revise_output_for_user",
     model="gemini-2.5-flash",
@@ -27,8 +28,6 @@ revise_output_for_user = Agent(
 
 image_extracter = Agent(
     name="image_extracter",
-    model="gemini-2.5-flash",
-    description="ウイスキーのラベル画像から新規に情報を抽出する専門家",
     instruction=IMAGE_EXTRACTER_INSTRUCTION,
     output_schema=WhiskyInfo,
     output_key="whisky_info",

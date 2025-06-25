@@ -5,7 +5,7 @@ from typing import Dict, Any, List, Optional, Literal
 from pydantic import BaseModel, Field, ValidationError
 from ...storage.firestore import FirestoreClient # FirestoreClientをインポート
 from .prompts import RECOMMEND_AGENT_INSTRUCTION
-from google.adk.tools import google_search
+from ..search_agent.agent import search_agent
 from google.adk.tools import agent_tool
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -26,15 +26,6 @@ async def get_user_whisky_history_from_firestore(tool_context: ToolContext) -> d
 
     return history
 
-
-search_agent = Agent(
-    model='gemini-2.5-flash',
-    name='SearchAgent',
-    description="google検索に特化したエージェント",
-    instruction="""google_searchツールでgoogle検索を実施""",
-    tools=[google_search,
-           ],
-)
 
 recommend_agent = Agent(
     name="recommend_agent",

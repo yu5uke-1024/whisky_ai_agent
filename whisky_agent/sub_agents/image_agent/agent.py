@@ -4,9 +4,11 @@ from typing import Dict, Any
 from pydantic import BaseModel, Field
 from .sub_agents.image_modifier import image_modifier
 from .sub_agents.whisky_label_processor import whisky_label_processor
-from .prompts import image_agent_INSTRUCTION
+from .prompts import IMAGE_AGENT_INSTRUCTION
 from whisky_agent.storage.firestore import FirestoreClient
 from google.adk.tools.tool_context import ToolContext
+from ..search_agent import search_agent
+from google.adk.tools import agent_tool
 
 def save_whisky_info_to_firestore(tool_context: ToolContext) -> dict:
     """ウイスキー情報をFirestoreに保存する
@@ -38,10 +40,11 @@ image_agent = Agent(
     name="image_agent",
     model="gemini-2.5-flash",
     description="ウイスキーのラベル画像を解析・管理・分析するエージェント。",
-    instruction=image_agent_INSTRUCTION,
+    instruction=IMAGE_AGENT_INSTRUCTION,
     sub_agents=[whisky_label_processor],
     tools=[
         AgentTool(image_modifier),
-        save_whisky_info_to_firestore
+        save_whisky_info_to_firestore,
+        AgentTool(search_agent),
         ]
 )

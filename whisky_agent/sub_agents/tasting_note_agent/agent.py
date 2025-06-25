@@ -9,6 +9,9 @@ from .sub_agents.tasting_note_modifier import tasting_note_modifier
 from .prompts import tasting_note_agent_INSTRUCTION
 from ...models import WhiskyInfo
 from ...models import create_whisky_id
+from ..search_agent import search_agent
+from google.adk.tools import agent_tool
+
 
 def save_tasting_note_to_firestore(tool_context: ToolContext) -> dict:
     """テイスティングノートをFirestoreに保存する
@@ -61,5 +64,6 @@ tasting_note_agent = Agent(
         AgentTool(tasting_note_creator),
         AgentTool(tasting_note_modifier),
         save_tasting_note_to_firestore,
-        AgentTool(whisky_info_creator)
+        AgentTool(whisky_info_creator),
+        agent_tool.AgentTool(search_agent)
     ])
