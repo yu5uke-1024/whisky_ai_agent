@@ -11,7 +11,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 async def get_user_whisky_history_from_firestore(tool_context: ToolContext) -> dict:
-    """テイスティングノートをFirestoreに保存する
+    """ユーザーのウイスキー履歴をFirestoreから取得する
 
     Args:
         tool_context: セッションステートにアクセスするためのコンテキスト
@@ -30,7 +30,7 @@ async def get_user_whisky_history_from_firestore(tool_context: ToolContext) -> d
 recommend_agent = Agent(
     name="recommend_agent",
     model="gemini-2.5-flash",
-    description="ウイスキーのおすすめを提案したり、一般的な会話をするエージェント",
+    description="ユーザーの好みやウイスキー履歴を分析し、パーソナライズされたウイスキー推薦や一般的な日常会話やウイスキーの知識を提供するエージェント",
     instruction=RECOMMEND_AGENT_INSTRUCTION,
     tools=[get_user_whisky_history_from_firestore,
            agent_tool.AgentTool(search_agent),
