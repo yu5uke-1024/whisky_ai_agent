@@ -59,18 +59,25 @@ class FirestoreClient:
             history.append(whisky_data)
         return history
 
-    def _get_random_user_id(self) -> str:
-        """ランダムなユーザーIDを取得する内部メソッド"""
+    def _get_random_user_id(self, exclude_user_id: str = None) -> str:
+        """ランダムなユーザーIDを取得する内部メソッド（指定されたユーザーIDを除外）"""
         users_ref = self.db.collection("users")
-        user_docs = users_ref.stream()
+        user_docs = users_ref.list_documents()
         user_ids = [doc.id for doc in user_docs]
 
         if not user_ids:
             raise ValueError("No users found in Firestore")
 
+        # 除外するユーザーIDがある場合は、それ以外のユーザーIDから選択
+        if exclude_user_id and exclude_user_id in user_ids:
+            available_user_ids = [uid for uid in user_ids if uid != exclude_user_id]
+            if not available_user_ids:
+                raise ValueError("No other users found in Firestore")
+            return random.choice(available_user_ids)
+
         return random.choice(user_ids)
 
-    async def get_whisky_history(self, user_id: str = None):
+    async def get_whisky_history(self, user_id: str = None, exclude_user_id: str = None):
         """ウイスキー履歴を取得（Firestoreが利用できない場合は空のリストを返す）"""
         if self.db is None:
             print("Firestore is not available, returning empty history")
@@ -85,7 +92,7 @@ class FirestoreClient:
             else:
                 # 他のユーザーIDからランダムに選択して履歴を取得
                 try:
-                    random_user_id = self._get_random_user_id()
+                    random_user_id = self._get_random_user_id(exclude_user_id)
                     print(f"Selected random user_id: {random_user_id}")
 
                     history = self._get_whisky_collection_for_user(random_user_id)

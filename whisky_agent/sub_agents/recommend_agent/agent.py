@@ -35,8 +35,9 @@ async def get_other_history(tool_context: ToolContext) -> dict:
     Returns:
         保存結果の確認メッセージを含む辞書
     """
+    user_id = tool_context.state.get("user_id", 'default_user_id')
     firestore_client = FirestoreClient()
-    history = await firestore_client.get_whisky_history()  # user_idを指定しないとランダムなユーザーの履歴を取得
+    history = await firestore_client.get_whisky_history(exclude_user_id=user_id)  # 現在のユーザーIDを除外
 
     return history
 
