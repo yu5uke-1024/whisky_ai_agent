@@ -29,6 +29,13 @@ class FirestoreClient:
             self.db = None
 
     def save_whisky_info(self, user_id: str, whisky_id: str, whisky_info: dict):
+        """
+        ウイスキー情報をFirestoreに更新または追加する。
+        Args:
+            user_id (str): ユーザーID。
+            whisky_id (str): ウイスキーID。
+            whisky_info (dict): 更新または追加するウイスキー情報のデータ。
+        """
         JST = timezone(timedelta(hours=9))
         if self.db is None:
             print("Firestore is not available, skipping save operation")
