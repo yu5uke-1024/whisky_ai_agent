@@ -1,5 +1,5 @@
 from google.cloud import firestore
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from dotenv import load_dotenv
 import os
 import random
@@ -31,19 +31,22 @@ class FirestoreClient:
     def save_whisky_info(self, user_id: str, whisky_id: str, whisky_info: dict):
         """
         ウイスキー情報をFirestoreに更新または追加する。
-
         Args:
             user_id (str): ユーザーID。
             whisky_id (str): ウイスキーID。
             whisky_info (dict): 更新または追加するウイスキー情報のデータ。
         """
+        JST = timezone(timedelta(hours=9))
         if self.db is None:
             print("Firestore is not available, skipping save operation")
             return
 
         try:
+            # JSTの現在時刻を取得
+            whisky_info_with_timestamp = whisky_info.copy()
+            whisky_info_with_timestamp["updated_at"] = datetime.now(JST)
             doc_ref = self.db.collection("users").document(user_id).collection("whisky_collection").document(whisky_id)
-            doc_ref.set(whisky_info, merge=True)
+            doc_ref.set(whisky_info_with_timestamp, merge=True)
             print(f"Whisky info saved for user {user_id}, whisky {whisky_id}")
         except Exception as e:
             print(f"Failed to save whisky info: {e}")
