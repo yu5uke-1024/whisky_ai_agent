@@ -25,7 +25,7 @@ search_agent = Agent(
     description="web検索をするエージェント",
     instruction="""
     あなたはweb検索エージェントです。
-    ユーザーの質問に対して、検索結果の要約と参照先のリンクを必ず出力してください。
+    ユーザーの質問に対して、検索結果と参照先のリンクを必ず出力してください。
     """,
     #tools=[google_search]
     tools=[adk_tavily_tool]
