@@ -7,7 +7,6 @@ from .sub_agents.whisky_label_processor import whisky_label_processor
 from .prompts import IMAGE_AGENT_INSTRUCTION
 from whisky_agent.storage.firestore import FirestoreClient
 from google.adk.tools.tool_context import ToolContext
-from ..search_agent import search_agent
 from google.adk.tools import agent_tool
 
 def save_whisky_info(tool_context: ToolContext) -> dict:
@@ -45,6 +44,5 @@ image_agent = Agent(
     tools=[
         AgentTool(image_modifier),
         save_whisky_info,
-        AgentTool(search_agent),
         ]
 )

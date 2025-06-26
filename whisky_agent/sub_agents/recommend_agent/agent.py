@@ -5,10 +5,6 @@ from typing import Dict, Any, List, Optional, Literal
 from pydantic import BaseModel, Field, ValidationError
 from ...storage.firestore import FirestoreClient # FirestoreClientをインポート
 from .prompts import RECOMMEND_AGENT_INSTRUCTION
-from ..search_agent.agent import search_agent
-from google.adk.tools import agent_tool
-from datetime import datetime
-from zoneinfo import ZoneInfo
 
 async def get_my_history(tool_context: ToolContext) -> dict:
     """ユーザーのウイスキー履歴をFirestoreから取得する
@@ -49,6 +45,5 @@ recommend_agent = Agent(
     instruction=RECOMMEND_AGENT_INSTRUCTION,
     tools=[get_my_history,
            get_other_history,
-           agent_tool.AgentTool(search_agent),
            ]
     )
