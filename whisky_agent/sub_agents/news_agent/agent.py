@@ -7,10 +7,12 @@ from langchain_community.tools import TavilySearchResults
 
 tavily_tool_instance = TavilySearchResults(
     max_results=3,
+    search_topic="news",
     search_depth="basic",
     include_answer=False,
     include_raw_content=False,
     include_images=False,
+    include_domains = ["https://prtimes.jp/"]
 )
 
 # Wrap it with LangchainTool for ADK
@@ -21,7 +23,10 @@ search_agent = Agent(
     model='gemini-2.5-flash',
     name='search_agent',
     description="web検索をするエージェント",
-    instruction="web検索をした結果を返す",
+    instruction="""
+    あなたはweb検索エージェントです。
+    ユーザーの質問に対して、検索結果の要約と参照先のリンクを必ず出力してください。
+    """,
     #tools=[google_search]
     tools=[adk_tavily_tool]
     )
