@@ -4,6 +4,7 @@ from .sub_agents.image_agent import image_agent
 from .sub_agents.tasting_note_agent import tasting_note_agent
 from .sub_agents.recommend_agent import recommend_agent
 from .sub_agents.news_agent import news_agent
+from .sub_agents.record_agent import record_agent
 from .prompts import INSTRUCTION
 from google.adk.agents.callback_context import CallbackContext
 from google.genai import types # For types.Content
@@ -33,7 +34,8 @@ root_agent = Agent(
         image_agent, # 画像解析サブエージェント
         tasting_note_agent, # テイスティングノート分析サブエージェント
         recommend_agent, # おすすめエージェント
-        news_agent
+        news_agent,
+        record_agent
     ],
     before_agent_callback=check_if_agent_should_run # Assign the callback
 )

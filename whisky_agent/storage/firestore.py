@@ -79,7 +79,7 @@ class FirestoreClient:
             return random.choice(available_user_ids)
 
         return random.choice(user_ids)
-
+    
     async def get_whisky_history(self, user_id: str = None, exclude_user_id: str = None):
         """ウイスキー履歴を取得（Firestoreが利用できない場合は空のリストを返す）"""
         if self.db is None:

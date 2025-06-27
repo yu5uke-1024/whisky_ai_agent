@@ -34,9 +34,8 @@ artifact_service = InMemoryArtifactService()
 runner = None
 APP_NAME = "Whisky Assistant"
 
-# シンプルなメモリ内セッション管理（main.pyと同様）
+# シンプルなメモリ内セッション管理
 active_sessions = {}
-session_cache = {}  # Firestoreデータのキャッシュ
 
 
 def format_line_response(text: str) -> str:
@@ -49,31 +48,23 @@ def format_line_response(text: str) -> str:
     return text.replace('*', '').strip()
 
 async def get_or_create_session_for_user(user_id: str):
-    """ユーザーごとのADKセッションを取得または作成（最適化版）"""
+    """ユーザーごとのADKセッションを取得または作成（メモリベース）"""
     global runner
 
     # Runnerの初期化
     if runner is None:
         runner = await initialize_whisky_agent_system(session_service, artifact_service, APP_NAME)
 
-    # キャッシュされたセッションがあるかチェック
+    # メモリ内にセッションがあるかチェック
     if user_id in active_sessions:
         return active_sessions[user_id]
 
-    # 新規セッション作成（シンプル化）
+    # 新規セッション作成
     session_id = f"session_{user_id}"
 
     try:
-        # Firestoreから復元を試行（非同期で並行実行しない）
-        existing_state = None
-        if user_id in session_cache:
-            existing_state = session_cache[user_id]
-        else:
-            # バックグラウンドでFirestoreから取得（ブロックしない）
-            asyncio.create_task(load_session_from_firestore(user_id))
-
-        # 初期状態でセッション作成
-        initial_state = existing_state or {
+        # 初期状態で新規セッション作成
+        initial_state = {
             "user_id": user_id,
             "interaction_history": [],
         }
@@ -86,10 +77,6 @@ async def get_or_create_session_for_user(user_id: str):
         )
 
         active_sessions[user_id] = new_session.id
-        session_cache[user_id] = initial_state
-
-        # バックグラウンドでFirestoreに保存（ブロックしない）
-        asyncio.create_task(save_session_to_firestore(user_id, new_session.id, initial_state))
 
         print(f"Session created for user {user_id}: {new_session.id}")
         return new_session.id
@@ -105,27 +92,6 @@ async def get_or_create_session_for_user(user_id: str):
         active_sessions[user_id] = fallback_session.id
         return fallback_session.id
 
-async def load_session_from_firestore(user_id: str):
-    """バックグラウンドでFirestoreからセッションを読み込み"""
-    try:
-        from whisky_agent.storage.firestore import FirestoreClient
-        firestore_client = FirestoreClient()
-        _, existing_state = firestore_client.get_session_with_id(user_id)
-        if existing_state:
-            session_cache[user_id] = existing_state
-            print(f"Session loaded from Firestore for user {user_id}")
-    except Exception as e:
-        print(f"Background Firestore load failed for user {user_id}: {e}")
-
-async def save_session_to_firestore(user_id: str, session_id: str, state: dict):
-    """バックグラウンドでFirestoreにセッションを保存"""
-    try:
-        from whisky_agent.storage.firestore import FirestoreClient
-        firestore_client = FirestoreClient()
-        firestore_client.save_session_with_id(user_id, session_id, state)
-        print(f"Session saved to Firestore for user {user_id}")
-    except Exception as e:
-        print(f"Background Firestore save failed for user {user_id}: {e}")
 
 async def process_with_multi_agent(user_id: str, query: str, image_data: Optional[bytes] = None) -> str:
     """ADKマルチエージェントシステムでメッセージを処理（最適化版）"""

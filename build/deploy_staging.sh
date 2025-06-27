@@ -35,7 +35,7 @@ echo -e "${BLUE}🔨 Cloud Build ジョブを開始しています...${NC}"
 
 # cloudbuild_staging.yaml の設定を元に、現在のディレクトリをコンテキストとしてCloud Buildジョブをサブミット
 gcloud builds submit \
-    --config cloudbuild_staging.yaml \
+    --config ./build/cloudbuild_staging.yaml \
     --substitutions SHORT_SHA=${COMMIT_SHA},BRANCH_NAME=${CURRENT_BRANCH} \
     .
 
