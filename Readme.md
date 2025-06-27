@@ -1,29 +1,23 @@
-# Whisky Multi-Agent System
+# ウイスキー・マルチエージェントシステム
 
 ---
 
 ## 概要
 
-Whisky Multi-Agent Systemは、ウイスキーの画像解析・テイスティングノート管理・レコメンド・履歴管理を行うマルチエージェントAIシステムです。Google ADKを活用し、複数のAIエージェントが協調して動作します。CLI・LINE Bot両対応。
+**ウイスキー・マルチエージェントシステム**は、ウイスキー愛好家・コレクター・プロフェッショナル向けのAIプラットフォームです。画像解析、テイスティングノート管理、パーソナライズ推薦、履歴分析などを、Google ADKを活用したマルチエージェント構成で実現します。CLI・LINE Bot両対応、Google Cloud Firestoreによるデータ永続化も特徴です。
 
 ---
 
-## 主な機能
+## 主な特徴
 
-- **画像解析**  
-  ウイスキーボトルのラベル画像からブランド名・蒸溜所・熟成年数などを自動抽出
-
-- **テイスティングノート管理**  
-  香り・味わい・余韻・評価などのテイスティングノートを記録・分析
-
-- **ウイスキー情報・履歴管理**  
-  Firestoreを用いたウイスキー情報・テイスティングノート・ユーザー履歴の保存・取得
-
-- **レコメンド・一般質問対応**  
-  ユーザー履歴に基づくウイスキーのおすすめや、ウイスキーに関する一般的な質問への回答
-
-- **LINE Bot連携**  
-  LINE上で画像送信・テキスト対話が可能
+- **画像解析**：ウイスキーボトルのラベル画像からブランド名・蒸溜所・熟成年数などを自動抽出
+- **テイスティングノート管理**：香り・味わい・余韻・評価などのノートを記録・編集・分析
+- **パーソナライズ推薦**：ユーザー履歴や好みに基づくウイスキーのおすすめ
+- **履歴分析**：国・地域ごとの傾向やコレクションの可視化
+- **ニュース・Web検索**：ウイスキー関連ニュースや一般的な質問への回答
+- **LINE Bot連携**：LINE上でテキスト・画像による対話が可能
+- **Firestore連携**：全データを安全かつスケーラブルに保存
+- **拡張性の高いマルチエージェント設計**：新たなエージェント追加も容易
 
 ---
 
@@ -34,14 +28,16 @@ Whisky Multi-Agent Systemは、ウイスキーの画像解析・テイスティ�
 ├── main.py                # CLIエントリーポイント
 ├── line_bot_server.py     # LINE Botサーバー (FastAPI)
 ├── whisky_agent/
-│   ├── agent.py           # ルートエージェント定義
-│   ├── models.py          # WhiskyInfo, TastingNote等データモデル
+│   ├── agent.py           # ルートエージェント（全体の司令塔）
+│   ├── models.py          # データモデル（WhiskyInfo, TastingNote等）
 │   ├── storage/
 │   │   └── firestore.py   # Firestore連携
 │   └── sub_agents/
-│       ├── image_agent/   # 画像解析サブエージェント
-│       ├── tasting_note_agent/ # テイスティングノートサブエージェント
-│       └── recommend_agent/    # レコメンド・一般質問サブエージェント
+│       ├── image_agent/   # 画像解析エージェント
+│       ├── tasting_note_agent/ # テイスティングノートエージェント
+│       ├── recommend_agent/    # レコメンドエージェント
+│       ├── record_agent/       # 履歴分析エージェント
+│       └── news_agent/         # ニュース・Web検索エージェント
 ├── utils.py               # セッション管理・共通関数
 ├── requirements.txt
 └── Dockerfile
@@ -49,85 +45,88 @@ Whisky Multi-Agent Systemは、ウイスキーの画像解析・テイスティ�
 
 ### エージェント構成
 
-- **root_agent**  
-  タスクを自動で振り分けるコーディネーター。  
-  サブエージェント：  
-  - `image_agent`（画像解析）
-  - `tasting_note_agent`（テイスティングノート管理）
-  - `recommend_agent`（レコメンド・一般質問）
+- **ルートエージェント**（whisky_master_agent）
+  - ユーザー入力やセッション状態に応じて各サブエージェントへタスクを振り分け
+  - サブエージェント：
+    - `image_agent`：画像解析・Firestore保存
+    - `tasting_note_agent`：テイスティングノート作成・編集・保存
+    - `recommend_agent`：パーソナライズ推薦・一般質問
+    - `record_agent`：履歴分析（国別・傾向分析など）
+    - `news_agent`：ウイスキーニュース・Web検索
 
-- **image_agent**  
-  画像からウイスキー情報を抽出し、Firestoreに保存
-
-- **tasting_note_agent**  
-  テイスティングノートの作成・編集・保存
-
-- **recommend_agent**  
-  履歴に基づくおすすめや一般的な質問対応
+- **サブエージェント**
+  - 各分野ごとに独立したロジック・ツールを持ち、拡張も容易
 
 ---
 
 ## データモデル
 
-- **WhiskyInfo**  
-  ブランド名、熟成年数、蒸溜所、生産国、地域、種類など
+- **WhiskyInfo（ウイスキー情報）**
+  - ブランド名（brand）
+  - 熟成年数（age）
+  - 蒸溜所（distillery）
+  - 生産国（country）
+  - 地域（region）
+  - 種類（whisky_type）
 
-- **TastingNote**  
-  香り（nose）、味わい（palate）、余韻（finish）、評価（rating）
+- **TastingNote（テイスティングノート）**
+  - 香り（nose）：特徴語リスト
+  - 味わい（palate）：特徴語リスト
+  - 余韻（finish）：特徴語リスト
+  - 評価（rating）：1〜5の数値
 
-Firestoreにより、ユーザーごと・ウイスキーごとに情報を永続化。
+Firestoreにより、ユーザー・ウイスキー・セッションごとに情報を永続化します。
 
 ---
 
 ## 必要要件
 
-- Python 3.8+
-- Google Cloud Firestore（認証情報が必要）
-- LINE Bot利用時はLINE Developersのチャネル設定
+- Python 3.8以上
+- Google Cloud Firestore（認証情報必須）
+- LINE Developersアカウント（LINE Bot利用時）
 
-### Pythonパッケージ
+### 主なPythonパッケージ
 
-`requirements.txt` より自動インストール推奨
+- google-adk==1.3.0
+- fastapi, uvicorn[standard]
+- line-bot-sdk
+- google-cloud-firestore
+- google-generativeai
+- langchain_community, tavily-python
+- python-dotenv, requests, gunicorn, python-multipart
 
-```
-python-dotenv
-flask
-line-bot-sdk
-requests
-gunicorn
-google-generativeai
-google-cloud-firestore
-urllib3<2
-google-adk==1.3.0
-fastapi
-uvicorn[standard]
-python-multipart
-```
+`requirements.txt`に全依存パッケージを記載しています。
 
 ---
 
-## セットアップ
+## セットアップ手順
 
-1. 仮想環境の作成・有効化
+1. **仮想環境の作成・有効化**
     ```bash
     python -m venv venv
     source venv/bin/activate  # Unix系
     venv\Scripts\activate     # Windows
     ```
 
-2. 依存パッケージのインストール
+2. **依存パッケージのインストール**
     ```bash
     pip install -r requirements.txt
     ```
 
-3. 環境変数の設定
-    - `.env` ファイルを作成し、以下を記載
-        ```
-        GOOGLE_API_KEY=xxx
-        FIREBASE_CREDENTIALS=xxx.json
-        LINE_CHANNEL_ACCESS_TOKEN=xxx
-        LINE_CHANNEL_SECRET=xxx
-        ```
+3. **環境変数の設定**
+    - `.env`ファイルを作成し、以下を記載
+      ```
+      GOOGLE_API_KEY=xxx
+      FIREBASE_CREDENTIALS=xxx.json
+      LINE_CHANNEL_ACCESS_TOKEN=xxx
+      LINE_CHANNEL_SECRET=xxx
+      ```
+
+4. **（任意）Dockerによるビルド・実行**
+    ```bash
+    docker build -t whisky-multi-agent .
+    docker run -p 8080:8080 whisky-multi-agent
+    ```
 
 ---
 
@@ -138,7 +137,7 @@ python-multipart
 ```bash
 python main.py
 ```
-- ユーザーID入力後、プロンプトに従いテキスト・画像パスを入力
+- ユーザーIDを入力し、プロンプトに従ってテキストや画像パスを入力
 - `exit` または `quit` で終了
 
 ### LINE Bot版
@@ -147,23 +146,66 @@ python main.py
 uvicorn line_bot_server:app --host 0.0.0.0 --port 8000
 ```
 - LINE DevelopersでWebhook URLを設定
-- 画像・テキストをLINEで送信して利用
+- LINEでテキストや画像を送信して利用
 
 ---
 
 ## Firestore構成
 
-- `users/{user_id}/whisky_collection/{whisky_id}`  
-  → ウイスキー情報・テイスティングノート
-- `user_sessions/{user_id}`  
-  → セッション・会話履歴
+- `users/{user_id}/whisky_collection/{whisky_id}`：ウイスキー情報・テイスティングノート
+- `user_sessions/{user_id}`：セッション・会話履歴
 
 ---
 
-## 開発・テスト
+## 各エージェントの詳細
 
-- 主要ロジックは `whisky_agent/` 配下
-- テスト画像は `test_images/` に配置
-- Dockerfile/Cloud Build対応
+### image_agent（画像解析エージェント）
+- ラベル画像からウイスキー情報を抽出
+- Firestoreへ自動保存
+
+### tasting_note_agent（テイスティングノートエージェント）
+- テイスティングノートの作成・編集・保存
+- 構造化ノートの自動生成やウイスキー情報との紐付け
+
+### recommend_agent（レコメンドエージェント）
+- 履歴分析によるパーソナライズ推薦
+- 他ユーザーの公開履歴も活用した協調フィルタリング
+- 一般的なウイスキー質問への回答
+
+### record_agent（履歴分析エージェント）
+- ユーザー履歴の国別・地域別集計や傾向分析
+- コレクションの可視化や発見に活用
+
+### news_agent（ニュース・Web検索エージェント）
+- ウイスキー関連ニュースの取得やWeb検索
+- Tavily等の外部検索APIとも連携
 
 ---
+
+## 開発・拡張ガイド
+
+- 主要ロジックは`whisky_agent/`配下に集約
+- 各エージェントは独立・モジュール化されており、追加・差し替えも容易
+- 新規サブエージェントは`sub_agents/`配下にディレクトリを作成し、`agent.py`で登録
+- テスト画像は`test_images/`に配置可能
+- Docker/Cloud Buildによるデプロイにも対応
+
+---
+
+## ライセンス
+
+MITライセンス
+
+---
+
+## 謝辞
+
+- [Google ADK](https://github.com/google/adk)・[Gemini](https://ai.google.dev/)を活用
+- [LINE Messaging API](https://developers.line.biz/ja/docs/messaging-api/)利用
+- Firestoreによるクラウドデータ管理
+
+---
+
+## お問い合わせ
+
+ご質問・ご要望・コントリビューションはIssue作成または管理者までご連絡ください。
