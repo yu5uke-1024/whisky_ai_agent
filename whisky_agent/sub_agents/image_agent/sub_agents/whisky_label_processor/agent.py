@@ -5,10 +5,8 @@ from .prompts import IMAGE_EXTRACTER_INSTRUCTION
 from .....models import WhiskyInfo
 from .....models import create_whisky_id
 
-
-
-revise_output_for_user = Agent(
-    name="revise_output_for_user",
+output_reviser = Agent(
+    name="output_reviser",
     model="gemini-2.5-flash",
     description="文章整形エージェント",
     instruction="""ImageAnalysisをユーザーにわかりやすく文章にして回答してください。
@@ -37,9 +35,8 @@ image_extracter = Agent(
     )
 
 
-
 whisky_label_processor = SequentialAgent(
     name="whisky_label_processor",
     description="ウイスキーのラベル画像から情報を抽出し、ユーザーに文章にして回答する",
-    sub_agents=[image_extracter, revise_output_for_user],
+    sub_agents=[image_extracter, output_reviser],
 )
