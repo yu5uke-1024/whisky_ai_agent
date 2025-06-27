@@ -7,8 +7,7 @@ from .sub_agents.news_agent import news_agent
 from .sub_agents.record_agent import record_agent
 from .prompts import INSTRUCTION
 from google.adk.agents.callback_context import CallbackContext
-from google.genai import types # For types.Content
-
+from google.genai import types
 
 def check_if_agent_should_run(callback_context: CallbackContext) -> Optional[types.Content]:
     """
@@ -29,13 +28,13 @@ root_agent = Agent(
     name="whisky_master_agent",
     model="gemini-2.5-flash",
     description="ウイスキー関連タスクの振り分け専門エージェント。自らは回答せず、対話履歴を確認して適切なサブエージェントにタスクを委譲します。",
-    instruction=INSTRUCTION, # エージェントの指示プロンプト
+    instruction=INSTRUCTION,
     sub_agents=[
-        image_agent, # 画像解析サブエージェント
-        tasting_note_agent, # テイスティングノート分析サブエージェント
-        recommend_agent, # おすすめエージェント
+        image_agent,
+        tasting_note_agent,
+        recommend_agent,
         news_agent,
         record_agent
     ],
-    before_agent_callback=check_if_agent_should_run # Assign the callback
+    before_agent_callback=check_if_agent_should_run
 )

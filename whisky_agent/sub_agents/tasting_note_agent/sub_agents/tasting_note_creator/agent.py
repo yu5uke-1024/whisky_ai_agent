@@ -1,11 +1,8 @@
 from google.adk.agents import Agent
-from typing import List, Optional, Dict, Any
-from pydantic import BaseModel, Field, ValidationError
 from .prompts import TASTING_NOTE_CREATION_INSTRUCTION
 from .....models import TastingAnalysis
 
 
-# テイスティングノート作成エージェントの定義
 tasting_note_creator = Agent(
     name="tasting_note_creator",
     model="gemini-2.5-flash",

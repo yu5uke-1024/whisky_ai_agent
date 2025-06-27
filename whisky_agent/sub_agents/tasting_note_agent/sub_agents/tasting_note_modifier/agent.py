@@ -1,8 +1,6 @@
 from google.adk.agents import Agent
 from google.adk.tools.tool_context import ToolContext
-from typing import Dict, Any, List, Union, Literal
-from .....models import TastingAnalysis
-from .....storage.firestore import FirestoreClient
+from typing import Literal
 
 NoteTypeStr = Literal["nose", "palate", "finish"]
 

@@ -1,6 +1,4 @@
-from google.adk.agents import Agent, SequentialAgent, LlmAgent
-from typing import List, Optional, Dict, Any
-from pydantic import BaseModel, Field, ValidationError
+from google.adk.agents import Agent, SequentialAgent
 from .prompts import IMAGE_EXTRACTER_INSTRUCTION
 from .....models import WhiskyInfo
 from .....models import create_whisky_id

@@ -1,8 +1,8 @@
 from google.adk.agents import Agent
 from google.adk.tools.tool_context import ToolContext
-from typing import Dict, Any, List, Union, Literal
+from typing import Literal
 from .prompts import IMAGE_MODIFICATION_INSTRUCTION
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 # 修正可能なフィールドの型定義
 FieldType = Literal["brand", "age", "distillery", "country", "region", "whisky_type"]
