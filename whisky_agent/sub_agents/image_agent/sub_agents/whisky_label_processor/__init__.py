@@ -1,11 +1,11 @@
 from .agent import (
     image_extracter,
-    revise_output_for_user,
+    output_reviser,
     whisky_label_processor,
 )
 
 __all__ = [
     'image_extracter',
-    'revise_output_for_user',
+    'output_reviser',
     'whisky_label_processor',
 ]
