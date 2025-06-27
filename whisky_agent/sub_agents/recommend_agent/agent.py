@@ -1,9 +1,7 @@
 from google.adk.agents import Agent
 from google.adk.tools.agent_tool import AgentTool
 from google.adk.tools.tool_context import ToolContext
-from typing import Dict, Any, List, Optional, Literal
-from pydantic import BaseModel, Field, ValidationError
-from ...storage.firestore import FirestoreClient # FirestoreClientをインポート
+from ...storage.firestore import FirestoreClient
 from .prompts import RECOMMEND_AGENT_INSTRUCTION
 
 async def get_my_history(tool_context: ToolContext) -> dict:

@@ -1,13 +1,10 @@
 from google.adk.agents import Agent
 from google.adk.tools.agent_tool import AgentTool
-from typing import Dict, Any
-from pydantic import BaseModel, Field
 from .sub_agents.image_modifier import image_modifier
 from .sub_agents.whisky_label_processor import whisky_label_processor
-from .prompts import IMAGE_AGENT_INSTRUCTION
 from whisky_agent.storage.firestore import FirestoreClient
 from google.adk.tools.tool_context import ToolContext
-from google.adk.tools import agent_tool
+from .prompts import IMAGE_AGENT_INSTRUCTION
 
 def save_whisky_info(tool_context: ToolContext) -> dict:
     """ウイスキー情報をFirestoreに保存する

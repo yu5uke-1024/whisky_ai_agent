@@ -1,7 +1,7 @@
 from google.adk.agents import Agent
 from google.adk.tools.agent_tool import AgentTool
 from google.adk.tools.tool_context import ToolContext
-from typing import Dict, Any, List, Optional, Literal
+from typing import List
 from pydantic import BaseModel, Field, ValidationError
 from collections import Counter
 from ...storage.firestore import FirestoreClient # FirestoreClientをインポート
@@ -36,21 +36,21 @@ async def analyze_whisky_by_country(tool_context: ToolContext) -> dict:
 
     firestore_client = FirestoreClient()
     history = await firestore_client.get_whisky_history(user_id)
-    
+
     if not history or not isinstance(history, list):
         return {"error": "履歴データが見つかりません"}
-    
+
     country_counts = Counter()
     for whisky in history:
         if isinstance(whisky, dict) and "country" in whisky:
             country_counts[whisky["country"]] += 1
-    
+
     result = {
         "total_whiskies": len(history),
         "countries": dict(country_counts),
         "unique_countries": len(country_counts)
     }
-    
+
     return result
 
 record_agent = Agent(

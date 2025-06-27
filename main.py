@@ -2,10 +2,8 @@ from dotenv import load_dotenv
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.adk.artifacts import InMemoryArtifactService
-from whisky_agent.agent import root_agent
 from utils import add_user_query_to_history, call_agent_async, create_or_get_session, initialize_whisky_agent_system
 import asyncio
-import os
 
 # 環境変数の読み込み
 load_dotenv()
