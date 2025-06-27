@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 import base64
 from google.genai import types
 
@@ -53,7 +53,8 @@ async def update_interaction_history(session_service, app_name, user_id, session
 
         # Add timestamp if not already present
         if "timestamp" not in entry:
-            entry["timestamp"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            JST = timezone(timedelta(hours=9))
+            entry["timestamp"] = datetime.now(JST)
 
         # Add the entry to interaction history
         interaction_history.append(entry)
