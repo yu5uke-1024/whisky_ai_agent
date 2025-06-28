@@ -4,36 +4,16 @@ from google.adk.tools import google_search
 from google.adk.tools.agent_tool import AgentTool
 from google.adk.tools.langchain_tool import LangchainTool
 from langchain_community.tools import TavilySearchResults
-from datetime import datetime
-from zoneinfo import ZoneInfo
-
-def get_tokyo_time() -> str:
-    """
-    東京の現在時刻をJSTで取得して、文字列として返します。
-
-    Returns:
-        str: 東京の現在時刻を示すフォーマットされた文字列。
-    """
-    # 東京のタイムゾーンを指定
-    tokyo_tz = ZoneInfo("Asia/Tokyo")
-
-    # 指定したタイムゾーンで現在時刻を取得
-    now = datetime.now(tokyo_tz)
-
-    # 結果を分かりやすい文字列にフォーマット
-    report = f'東京の現在時刻は {now.strftime("%Y-%m-%d %H:%M:%S %Z")} です。'
-
-    return {"status": "success", "report": report}
-
 
 
 tavily_tool_instance = TavilySearchResults(
-    max_results=3,
+    max_results=5,
     search_topic="news",
     search_depth="basic",
     include_answer=False,
     include_raw_content=False,
     include_images=False,
+    days=5,
     include_domains = ["https://prtimes.jp/"]
 )
 
@@ -58,5 +38,5 @@ news_agent = Agent(
     name='news_agent',
     description="ウイスキーのニュース検索に特化したエージェント",
     instruction=NEWS_AGENT_INSTRUCTION,
-    tools=[AgentTool(search_agent), get_tokyo_time]
+    tools=[AgentTool(search_agent)]
     )
