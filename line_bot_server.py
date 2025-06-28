@@ -14,7 +14,7 @@ from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.adk.artifacts import InMemoryArtifactService
 from whisky_agent.agent import root_agent
-from utils import call_agent_async, add_user_query_to_history, create_or_get_session, initialize_whisky_agent_system
+from utils import call_agent_async, initialize_whisky_agent_system
 
 load_dotenv()
 
@@ -109,8 +109,7 @@ async def process_with_multi_agent(user_id: str, query: str, image_data: Optiona
                 temp_file.write(image_data)
                 image_path = temp_file.name
 
-        # 履歴追加をスキップ（パフォーマンス優先）
-        # await add_user_query_to_history(session_service, APP_NAME, user_id, session_id, query)
+        # 履歴追加をスキップ（メモリのみセッション管理）
 
         # ADKマルチエージェントを呼び出し
         response = await call_agent_async(
