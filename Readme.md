@@ -1,10 +1,10 @@
-# ウイスキー・マルチエージェントシステム
+# Whisky AI Bartender
 
 ---
 
 ## 概要
 
-**ウイスキー・マルチエージェントシステム**は、ウイスキー愛好家・コレクター・プロフェッショナル向けのAIプラットフォームです。画像解析、テイスティングノート管理、パーソナライズ推薦、履歴分析などを、Google ADKを活用したマルチエージェント構成で実現します。CLI・LINE Bot両対応、Google Cloud Firestoreによるデータ永続化も特徴です。
+**Whisky AI Bartender**は、ウイスキー体験を包括的にサポートするアプリです。画像解析、テイスティングノート管理、パーソナライズ推薦、履歴分析などを、Google ADKを活用したマルチエージェント構成で実現します。CLI・LINE Bot両対応、Google Cloud Firestoreによるデータ永続化も特徴です。
 
 ---
 
@@ -75,7 +75,7 @@
   - 余韻（finish）：特徴語リスト
   - 評価（rating）：1〜5の数値
 
-Firestoreにより、ユーザー・ウイスキー・セッションごとに情報を永続化します。
+Firestoreにより、ユーザー・ウイスキー・ごとに情報を永続化します。
 
 ---
 
@@ -153,7 +153,6 @@ uvicorn line_bot_server:app --host 0.0.0.0 --port 8000
 ## Firestore構成
 
 - `users/{user_id}/whisky_collection/{whisky_id}`：ウイスキー情報・テイスティングノート
-- `user_sessions/{user_id}`：セッション・会話履歴
 
 ---
 
@@ -189,20 +188,6 @@ uvicorn line_bot_server:app --host 0.0.0.0 --port 8000
 - 新規サブエージェントは`sub_agents/`配下にディレクトリを作成し、`agent.py`で登録
 - テスト画像は`test_images/`に配置可能
 - Docker/Cloud Buildによるデプロイにも対応
-
----
-
-## ライセンス
-
-MITライセンス
-
----
-
-## 謝辞
-
-- [Google ADK](https://github.com/google/adk)・[Gemini](https://ai.google.dev/)を活用
-- [LINE Messaging API](https://developers.line.biz/ja/docs/messaging-api/)利用
-- Firestoreによるクラウドデータ管理
 
 ---
 
