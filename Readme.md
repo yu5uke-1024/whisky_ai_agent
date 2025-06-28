@@ -36,7 +36,7 @@
 │       ├── image_agent/   # 画像解析エージェント
 │       ├── tasting_note_agent/ # テイスティングノートエージェント
 │       ├── recommend_agent/    # レコメンドエージェント
-│       ├── record_agent/       # 履歴分析エージェント
+│       ├── look_back_agent/       # 履歴分析エージェント
 │       └── news_agent/         # ニュース・Web検索エージェント
 ├── utils.py               # セッション管理・共通関数
 ├── requirements.txt
@@ -51,7 +51,7 @@
     - `image_agent`：画像解析・Firestore保存
     - `tasting_note_agent`：テイスティングノート作成・編集・保存
     - `recommend_agent`：パーソナライズ推薦・一般質問
-    - `record_agent`：履歴分析（国別・傾向分析など）
+    - `look_back_agent`：履歴分析（国別・傾向分析など）
     - `news_agent`：ウイスキーニュース・Web検索
 
 - **サブエージェント**
@@ -172,7 +172,7 @@ uvicorn line_bot_server:app --host 0.0.0.0 --port 8000
 - 他ユーザーの公開履歴も活用した協調フィルタリング
 - 一般的なウイスキー質問への回答
 
-### record_agent（履歴分析エージェント）
+### look_back_agent（履歴分析エージェント）
 - ユーザー履歴の国別・地域別集計や傾向分析
 - コレクションの可視化や発見に活用
 

@@ -29,8 +29,8 @@ INSTRUCTION = """
 
 4. news_agent（サブエージェント）
    - ウイスキーのニュースを調査
-   
-5. record_agent(サブエージェント)
+
+5. look_back_agent(サブエージェント)
    - 過去にユーザーが記録したリストの確認・振り返り
 
 # 処理判断フロー
@@ -55,7 +55,7 @@ INSTRUCTION = """
 
    - ウイスキーのニュース → news_agentへ
 
-   - 過去履歴の確認 → record_agentへ
+   - 過去履歴の確認 → look_back_agentへ
 
    - 画像解析関連 (画像解析、修正、保存) → image_agentへ転送
 
@@ -68,7 +68,7 @@ INSTRUCTION = """
    - ユーザーが過去履歴を確認したあと、過去の飲んだウイスキーのテイスティングノートを確認する場合があるので、その場合は、レコメンドエージェントに渡して過去履歴のテイスティングノートを確認する必要があります。
 - おすすめ関連のタスクや一般的な質問や会話は必ずrecommend_agentが実行
 - ウイスキーのニュース関連のタスクは必ずnews_agentが実行
-- 過去履歴の確認は必ずrecord_agentが実行
+- 過去履歴の確認は必ずlook_back_agentが実行
 - 対話履歴を必ず確認してから振り分けを決定してください。
 
 # 利用できるサブエージェント
@@ -76,7 +76,7 @@ INSTRUCTION = """
 - tasting_note_agent (テイスティングノート生成・修正・保存)
 - recommend_agent (おすすめ提案)
 - news_agent (ウイスキーニュースを確認)
-- record_agent(過去履歴を確認・傾向分析)
+- look_back_agent(過去履歴を確認・傾向分析)
 
 **対話履歴:**
 {interaction_history?}
