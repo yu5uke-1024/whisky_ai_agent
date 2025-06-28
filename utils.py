@@ -71,14 +71,6 @@ async def update_interaction_history(session_service, app_name, user_id, session
             state=updated_state,
         )
 
-        # メモリのみセッション管理 - Firestore保存は無効化
-        # try:
-        #     from whisky_agent.storage.firestore import FirestoreClient
-        #     firestore_client = FirestoreClient()
-        #     firestore_client.save_session_with_id(user_id, session_id, updated_state)
-        # except Exception as firestore_error:
-        #     print(f"Failed to save state to Firestore: {firestore_error}")
-
         # LINEボット環境でローカルステートキャッシュを更新
         try:
             from line_bot_server import user_session_states
@@ -288,27 +280,6 @@ async def call_agent_async(runner, user_id, session_id, query:str, image_path:st
 
 async def create_or_get_session(session_service, app_name, user_id):
     """セッションを作成または取得する共通関数（メモリのみ）"""
-
-    # メモリのみセッション管理 - Firestoreからの復元は無効化
-    # try:
-    #     from whisky_agent.storage.firestore import FirestoreClient
-    #     firestore_client = FirestoreClient()
-    #     existing_session_id, existing_state = firestore_client.get_session_with_id(user_id)
-    #
-    #     if existing_session_id and existing_state:
-    #         print(f"Found existing session in Firestore for user {user_id}: {existing_session_id}")
-    #         # 既存セッションを復元
-    #         session = await session_service.create_session(
-    #             app_name=app_name,
-    #             user_id=user_id,
-    #             session_id=existing_session_id,
-    #             state=existing_state,
-    #         )
-    #         print(f"Session restored: ID={session.id}, User={user_id}")
-    #         return session
-    # except Exception as e:
-    #     print(f"Failed to load existing session from Firestore: {e}")
-
     # 常に新しいセッションを作成（メモリのみ）
     initial_state = {
         "interaction_history": [],
@@ -320,13 +291,6 @@ async def create_or_get_session(session_service, app_name, user_id):
         state=initial_state,
     )
 
-    # メモリのみセッション管理 - Firestoreへの保存は無効化
-    # try:
-    #     from whisky_agent.storage.firestore import FirestoreClient
-    #     firestore_client = FirestoreClient()
-    #     firestore_client.save_session_with_id(user_id, session.id, initial_state)
-    # except Exception as e:
-    #     print(f"Failed to save new session to Firestore: {e}")
 
     print(f"New session created (memory-only): ID={session.id}, User={user_id}, State={session.state}")
     return session
